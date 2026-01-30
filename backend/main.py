@@ -37,9 +37,11 @@ def fetch_html():
     r.raise_for_status()
     return r.text
 
+
 def extract_group_code(godziny: str) -> str:
     parts = godziny.split()
     return parts[-1] if parts else ""
+
 
 def parse_plan(html):
     soup = BeautifulSoup(html, "html.parser")
@@ -52,26 +54,34 @@ def parse_plan(html):
 
     for row in rows:
         cols = [c.get_text(strip=True) for c in row.find_all("td")]
-        if len(cols) < 11:
+
+        # ❗ POMIŃ wiersze nagłówków i błędne wiersze
+        if len(cols) != 11:
+            continue
+
+        # ❗ POMIŃ nagłówki pojawiające się w środku tabeli
+        header_keywords = ["data", "godz", "grupa", "zajęcia", "forma", "sala", "prowadzący", "uwagi"]
+        if any(cols[i].lower() in header_keywords for i in range(len(cols))):
             continue
 
         godziny = cols[4]
         group_code = extract_group_code(godziny)
 
         parsed.append({
-            "data": cols[1],
-            "od": cols[2],
-            "do": cols[3],
-            "group_code": group_code,      # Ćw1N / Ćw2N / WykN
-            "przedmiot": cols[5],          # nazwa przedmiotu
-            "typ": cols[6],                # Cw / Wyk
-            "sala": cols[7],               # sala
-            "prowadzacy": cols[8],         # prowadzący
-            "zaliczenie": cols[9],         # egzamin / zaliczenie
-            "uwagi": cols[10],             # uwagi
+            "data": cols[1],          # 2025-10-12
+            "od": cols[2],            # 10:45
+            "do": cols[3],            # 12:15
+            "group_code": group_code, # Ćw1N / Ćw2N / WykN
+            "przedmiot": cols[5],     # nazwa przedmiotu
+            "typ": cols[6],           # Cw / Wyk
+            "sala": cols[7],          # sala
+            "prowadzacy": cols[8],    # prowadzący
+            "zaliczenie": cols[9],    # Zaliczenie ocena / Egzamin
+            "uwagi": cols[10],        # Brak / Distance learning / Odwołane
         })
 
     return parsed
+
 
 @app.get("/plan")
 def get_plan():
