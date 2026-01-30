@@ -2,49 +2,270 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8" />
-  <title>EduFlow✍️</title>
+  <title>EduFlow – plan zajęć</title>
 
   <link rel="stylesheet" href="https://cdn.datatables.net/2.1.8/css/dataTables.dataTables.min.css">
 
   <style>
-    body { font-family: system-ui, sans-serif; padding: 20px; }
-    h1 { margin-bottom: 20px; }
-    .filters { margin-bottom: 20px; display: flex; gap: 20px; align-items: center; }
+    :root {
+      --bg: #f3f4f6;
+      --card-bg: #ffffff;
+      --border: #d1d5db;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --accent: #2563eb;
+      --accent-soft: #dbeafe;
+      --danger-soft: #fee2e2;
+      --danger-border: #fecaca;
+      --day-separator: #9ca3af;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text-main);
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 260px;
+      background: #e5e7eb;
+      border-right: 1px solid var(--border);
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    .sidebar h1 {
+      font-size: 20px;
+      margin: 0 0 16px;
+    }
+
+    .sidebar section {
+      margin-bottom: 20px;
+    }
+
+    .sidebar label {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 4px;
+      color: var(--text-muted);
+    }
+
+    .sidebar select,
+    .sidebar button {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: #f9fafb;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .sidebar button {
+      margin-top: 6px;
+      background: #e5e7eb;
+    }
+
+    .sidebar button.active {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .view-toggle {
+      display: flex;
+      gap: 8px;
+    }
+
+    .view-toggle button {
+      flex: 1;
+    }
+
+    .main {
+      flex: 1;
+      padding: 20px;
+      box-sizing: border-box;
+      overflow: auto;
+    }
+
+    .header-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 12px;
+    }
+
+    .header-line h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .header-line span {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* TABLE VIEW */
+    #tableContainer {
+      display: none;
+    }
+
+    table.dataTable tbody tr.cancelled {
+      background: var(--danger-soft) !important;
+    }
+
+    table.dataTable tbody tr.day-separator-row td {
+      border-top: 2px solid var(--day-separator) !important;
+    }
+
+    /* CARD VIEW */
+    #cardsContainer {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .day-block {
+      border-top: 1px solid var(--day-separator);
+      padding-top: 10px;
+      margin-top: 10px;
+    }
+
+    .day-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--day-separator);
+      margin-bottom: 6px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .card.cancelled {
+      background: var(--danger-soft);
+      border-color: var(--danger-border);
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .time {
+      font-weight: 600;
+    }
+
+    .group-tag {
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #111827;
+      background: #e5e7eb;
+    }
+
+    .group-Ćw1N { background: #dbeafe; color: #1d4ed8; }
+    .group-Ćw2N { background: #dcfce7; color: #15803d; }
+    .group-Ćw3N { background: #fef9c3; color: #854d0e; }
+    .group-Ćw4N { background: #fee2e2; color: #b91c1c; }
+    .group-Ćw5N { background: #e0e7ff; color: #4338ca; }
+    .group-WykN { background: #f3e8ff; color: #7e22ce; }
+
+    .card-main {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .card-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .card-meta span {
+      margin-right: 10px;
+    }
+
+    .card-uwagi {
+      font-size: 12px;
+      margin-top: 2px;
+    }
   </style>
 </head>
 <body>
 
-  <h1>Plan zajęć – tok 1199</h1>
+  <aside class="sidebar">
+    <h1>EduFlow</h1>
 
-  <div class="filters">
-    <label>Grupa:
+    <section>
+      <label for="groupSelect">Grupa</label>
       <select id="groupSelect">
         <option value="all">Wszystkie</option>
       </select>
-    </label>
+    </section>
 
-    <label>Od: <input type="date" id="startDate"></label>
-    <label>Do: <input type="date" id="endDate"></label>
-    <button id="filterDateBtn">Filtruj zakres dat</button>
-  </div>
+    <section>
+      <label>Zakres dat</label>
+      <button class="date-mode-btn active" data-mode="nearest">Najbliższy zjazd</button>
+      <button class="date-mode-btn" data-mode="next">Następny zjazd</button>
+      <button class="date-mode-btn" data-mode="all">Cały semestr</button>
+      <button class="date-mode-btn" data-mode="custom">Własny zakres</button>
+      <div id="customDates" style="margin-top:8px; display:none;">
+        <input type="date" id="startDate" style="margin-bottom:4px; width:100%;">
+        <input type="date" id="endDate" style="width:100%;">
+        <button id="applyCustomDates" style="margin-top:4px;">Zastosuj</button>
+      </div>
+    </section>
 
-  <table id="plan" class="display" style="width:100%">
-    <thead>
-      <tr>
-        <th>Data</th>
-        <th>Od</th>
-        <th>Do</th>
-        <th>Godz.</th>
-        <th>Grupa</th>
-        <th>Zajęcia</th>
-        <th>Forma</th>
-        <th>Sala</th>
-        <th>Prowadzący</th>
-        <th>Uwagi</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+    <section>
+      <label>Widok</label>
+      <div class="view-toggle">
+        <button id="viewCards" class="active">Karty</button>
+        <button id="viewTable">Tabela</button>
+      </div>
+    </section>
+  </aside>
+
+  <main class="main">
+    <div class="header-line">
+      <h2>Plan zajęć – tok 1199</h2>
+      <span id="currentRangeLabel"></span>
+    </div>
+
+    <div id="cardsContainer"></div>
+
+    <div id="tableContainer">
+      <table id="planTable" class="display" style="width:100%">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Od</th>
+            <th>Do</th>
+            <th>Grupa</th>
+            <th>Zajęcia</th>
+            <th>Forma</th>
+            <th>Sala</th>
+            <th>Prowadzący</th>
+            <th>Uwagi</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </main>
 
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <script src="https://cdn.datatables.net/2.1.8/js/dataTables.min.js"></script>
@@ -52,89 +273,344 @@
   <script>
     const API_URL = "https://eduflow-qivy.onrender.com/plan";
 
-    let table;
+    let fullData = [];
+    let filteredData = [];
+    let table = null;
+    let currentView = "cards";
+    let currentDateMode = "nearest";
+    let currentGroup = "all";
 
-    async function loadPlan() {
-      const res = await fetch(API_URL);
-      const data = await res.json();
+    function parseDate(d) {
+      // backend zwraca np. "2025-10-12"
+      return new Date(d);
+    }
 
-      const rows = data.map(item => [
-        item.data, item.od, item.do, item.godziny,
-        item.grupa, item.zajecia, item.forma,
-        item.sala, item.prowadzacy, item.uwagi
-      ]);
+    function isWeekend(date) {
+      const day = date.getDay(); // 0 = niedziela, 6 = sobota
+      return day === 0 || day === 6;
+    }
 
-      table = $('#plan').DataTable({
-        data: rows,
-        columns: [
-          { title: "Data" },
-          { title: "Od" },
-          { title: "Do" },
-          { title: "Godz." },
-          { title: "Grupa" },
-          { title: "Zajęcia" },
-          { title: "Forma" },
-          { title: "Sala" },
-          { title: "Prowadzący" },
-          { title: "Uwagi" }
-        ],
-        order: [[0, "asc"], [1, "asc"]],
-        pageLength: 25,
-        language: {
-          url: "https://cdn.datatables.net/plug-ins/2.1.8/i18n/pl.json"
-        }
+    function groupByDate(data) {
+      const map = {};
+      data.forEach(item => {
+        if (!map[item.data]) map[item.data] = [];
+        map[item.data].push(item);
       });
+      const entries = Object.entries(map).sort((a, b) => new Date(a[0]) - new Date(b[0]));
+      return entries;
+    }
 
-      const groups = [...new Set(data.map(item => item.grupa))];
+    function findWeekendBlocks(data) {
+      const byDate = groupByDate(data);
+      const weekends = [];
+
+      for (let i = 0; i < byDate.length; i++) {
+        const [dateStr, items] = byDate[i];
+        const date = parseDate(dateStr);
+        if (!isWeekend(date)) continue;
+
+        const block = { start: dateStr, end: dateStr, dates: [dateStr] };
+
+        // sprawdź sąsiedni dzień (sobota + niedziela)
+        if (i + 1 < byDate.length) {
+          const [nextDateStr] = byDate[i + 1];
+          const nextDate = parseDate(nextDateStr);
+          const diff = (nextDate - date) / (1000 * 60 * 60 * 24);
+          if (diff === 1 && isWeekend(nextDate)) {
+            block.end = nextDateStr;
+            block.dates.push(nextDateStr);
+          }
+        }
+
+        weekends.push(block);
+      }
+
+      return weekends;
+    }
+
+    function filterByDateMode() {
+      if (currentDateMode === "all") {
+        return fullData.slice();
+      }
+
+      const weekends = findWeekendBlocks(fullData);
+      if (weekends.length === 0) return fullData.slice();
+
+      const today = new Date();
+      let chosen = weekends[0];
+
+      if (currentDateMode === "nearest") {
+        let best = null;
+        let bestDiff = Infinity;
+        weekends.forEach(block => {
+          const d = parseDate(block.start);
+          const diff = (d - today) / (1000 * 60 * 60 * 24);
+          if (diff >= 0 && diff < bestDiff) {
+            bestDiff = diff;
+            best = block;
+          }
+        });
+        chosen = best || weekends[0];
+      }
+
+      if (currentDateMode === "next") {
+        let best = null;
+        let bestDiff = Infinity;
+        weekends.forEach(block => {
+          const d = parseDate(block.start);
+          const diff = (d - today) / (1000 * 60 * 60 * 24);
+          if (diff > 0 && diff < bestDiff) {
+            bestDiff = diff;
+            best = block;
+          }
+        });
+        chosen = best || weekends[weekends.length - 1];
+      }
+
+      const setDates = new Set(chosen.dates);
+      const result = fullData.filter(item => setDates.has(item.data));
+
+      const label = chosen.start === chosen.end
+        ? `Zjazd: ${chosen.start}`
+        : `Zjazd: ${chosen.start} – ${chosen.end}`;
+      document.getElementById("currentRangeLabel").textContent = label;
+
+      return result;
+    }
+
+    function filterByCustomDates(start, end) {
+      const s = new Date(start);
+      const e = new Date(end);
+      const result = fullData.filter(item => {
+        const d = parseDate(item.data);
+        return d >= s && d <= e;
+      });
+      document.getElementById("currentRangeLabel").textContent = `Zakres: ${start} – ${end}`;
+      return result;
+    }
+
+    function filterByGroup(data) {
+      if (currentGroup === "all") return data;
+
+      return data.filter(item => {
+        if (item.group_code === currentGroup) return true;
+        if (item.group_code === "WykN") return true;
+        return false;
+      });
+    }
+
+    function applyAllFilters() {
+      let base;
+      if (currentDateMode === "custom") {
+        const s = document.getElementById("startDate").value;
+        const e = document.getElementById("endDate").value;
+        if (s && e) {
+          base = filterByCustomDates(s, e);
+        } else {
+          base = fullData.slice();
+        }
+      } else {
+        base = filterByDateMode();
+      }
+
+      filteredData = filterByGroup(base);
+      render();
+    }
+
+    function render() {
+      if (currentView === "cards") {
+        document.getElementById("cardsContainer").style.display = "flex";
+        document.getElementById("tableContainer").style.display = "none";
+        renderCards();
+      } else {
+        document.getElementById("cardsContainer").style.display = "none";
+        document.getElementById("tableContainer").style.display = "block";
+        renderTable();
+      }
+    }
+
+    function renderCards() {
+      const container = document.getElementById("cardsContainer");
+      container.innerHTML = "";
+
+      const byDate = groupByDate(filteredData);
+
+      byDate.forEach(([dateStr, items]) => {
+        const dayBlock = document.createElement("div");
+        dayBlock.className = "day-block";
+
+        const title = document.createElement("div");
+        title.className = "day-title";
+        title.textContent = dateStr;
+        dayBlock.appendChild(title);
+
+        items.sort((a, b) => a.od.localeCompare(b.od));
+
+        items.forEach(item => {
+          const card = document.createElement("div");
+          card.className = "card";
+
+          const uwagiLower = (item.uwagi || "").toLowerCase();
+          if (uwagiLower.includes("odwołane")) {
+            card.classList.add("cancelled");
+          }
+
+          const top = document.createElement("div");
+          top.className = "card-top";
+
+          const time = document.createElement("div");
+          time.className = "time";
+          time.textContent = `${item.od}–${item.do}`;
+          top.appendChild(time);
+
+          const tag = document.createElement("div");
+          tag.className = "group-tag";
+          if (item.group_code) {
+            tag.classList.add(`group-${item.group_code}`);
+            tag.textContent = item.group_code;
+          } else {
+            tag.textContent = "—";
+          }
+          top.appendChild(tag);
+
+          card.appendChild(top);
+
+          const main = document.createElement("div");
+          main.className = "card-main";
+          main.textContent = item.zajecia || "Zajęcia";
+          card.appendChild(main);
+
+          const meta = document.createElement("div");
+          meta.className = "card-meta";
+          meta.innerHTML = `
+            <span>${item.forma || ""}</span>
+            <span>${item.sala || ""}</span>
+            <span>${item.prowadzacy || ""}</span>
+          `;
+          card.appendChild(meta);
+
+          if (item.uwagi) {
+            const uw = document.createElement("div");
+            uw.className = "card-uwagi";
+            uw.textContent = item.uwagi;
+            card.appendChild(uw);
+          }
+
+          dayBlock.appendChild(card);
+        });
+
+        container.appendChild(dayBlock);
+      });
+    }
+
+    function renderTable() {
+      const rows = filteredData
+        .sort((a, b) => {
+          const d = parseDate(a.data) - parseDate(b.data);
+          if (d !== 0) return d;
+          return a.od.localeCompare(b.od);
+        })
+        .map(item => [
+          item.data,
+          item.od,
+          item.do,
+          item.group_code || "",
+          item.zajecia,
+          item.forma,
+          item.sala,
+          item.prowadzacy,
+          item.uwagi
+        ]);
+
+      if (!table) {
+        table = $('#planTable').DataTable({
+          data: rows,
+          columns: [
+            { title: "Data" },
+            { title: "Od" },
+            { title: "Do" },
+            { title: "Grupa" },
+            { title: "Zajęcia" },
+            { title: "Forma" },
+            { title: "Sala" },
+            { title: "Prowadzący" },
+            { title: "Uwagi" }
+          ],
+          pageLength: 50,
+          language: {
+            url: "https://cdn.datatables.net/plug-ins/2.1.8/i18n/pl.json"
+          },
+          createdRow: function (row, data) {
+            const uwagi = (data[8] || "").toLowerCase();
+            if (uwagi.includes("odwołane")) {
+              row.classList.add("cancelled");
+            }
+          }
+        });
+      } else {
+        table.clear();
+        table.rows.add(rows);
+        table.draw();
+      }
+    }
+
+    async function init() {
+      const res = await fetch(API_URL);
+      fullData = await res.json();
+
+      const groups = [...new Set(
+        fullData
+          .map(i => i.group_code)
+          .filter(code => code && code.startsWith("Ćw"))
+      )].sort();
+
       const select = document.getElementById("groupSelect");
-
       groups.forEach(g => {
         const opt = document.createElement("option");
         opt.value = g;
         opt.textContent = g;
         select.appendChild(opt);
       });
+
+      applyAllFilters();
     }
 
-    document.getElementById("groupSelect").addEventListener("change", async () => {
-      const group = document.getElementById("groupSelect").value;
-
-      let url = API_URL;
-      if (group !== "all") {
-        url = `${API_URL}/group/${group}`;
-      }
-
-      const res = await fetch(url);
-      const data = await res.json();
-
-      table.clear();
-      table.rows.add(data.map(item => [
-        item.data, item.od, item.do, item.godziny,
-        item.grupa, item.zajecia, item.forma,
-        item.sala, item.prowadzacy, item.uwagi
-      ]));
-      table.draw();
+    document.getElementById("groupSelect").addEventListener("change", e => {
+      currentGroup = e.target.value;
+      applyAllFilters();
     });
 
-    document.getElementById("filterDateBtn").addEventListener("click", async () => {
-      const start = document.getElementById("startDate").value;
-      const end = document.getElementById("endDate").value;
-
-      if (!start || !end) return;
-
-      const res = await fetch(`${API_URL}/range?start=${start}&end=${end}`);
-      const data = await res.json();
-
-      table.clear();
-      table.rows.add(data.map(item => [
-        item.data, item.od, item.do, item.godziny,
-        item.grupa, item.zajecia, item.forma,
-        item.sala, item.prowadzacy, item.uwagi
-      ]));
-      table.draw();
+    document.querySelectorAll(".date-mode-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".date-mode-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        currentDateMode = btn.dataset.mode;
+        document.getElementById("customDates").style.display =
+          currentDateMode === "custom" ? "block" : "none";
+        applyAllFilters();
+      });
     });
 
-    loadPlan();
+    document.getElementById("applyCustomDates").addEventListener("click", () => {
+      currentDateMode = "custom";
+      applyAllFilters();
+    });
+
+    document.getElementById("viewCards").addEventListener("click", () => {
+      currentView = "cards";
+      document.getElementById("viewCards").classList.add("active");
+      document.getElementById("viewTable").classList.remove("active");
+      render();
+    });
+
+    document.getElementById("viewTable").addEventListener("click", () => {
+      currentView = "table";
+      document.getElementById("viewTable").classList.add("active");
+      document.getElementById("viewCards").classList.remove("active");
+      render();
+    });
+
+    init();
   </script>
 
 </body>
