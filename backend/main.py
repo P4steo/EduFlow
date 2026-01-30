@@ -1,3 +1,4 @@
+import time
 import requests
 from bs4 import BeautifulSoup
 from fastapi import FastAPI
@@ -33,9 +34,21 @@ def fetch_html():
         "id": TOK_ID,
     }
 
-    r = s.post(URL_GRID, data=payload)
-    r.raise_for_status()
-    return r.text
+    # 🔁 3 próby pobrania danych
+    for attempt in range(3):
+        r = s.post(URL_GRID, data=payload)
+        r.raise_for_status()
+        html = r.text
+
+        # jeśli tabela zawiera <td> → OK
+        if "<td" in html.lower():
+            return html
+
+        # jeśli nie → poczekaj i spróbuj ponownie
+        time.sleep(1)
+
+    # po 3 próbach nadal pusto
+    return None
 
 
 def extract_group_code(godziny: str) -> str:
@@ -44,10 +57,13 @@ def extract_group_code(godziny: str) -> str:
 
 
 def parse_plan(html):
+    if not html:
+        return {"error": "Brak danych z DSW. Spróbuj ponownie za chwilę."}
+
     soup = BeautifulSoup(html, "html.parser")
     table = soup.find("table", {"id": "gridViewPlanyTokow_DXMainTable"})
     if not table:
-        return []
+        return {"error": "Brak tabeli w danych z DSW."}
 
     rows = table.find_all("tr")
     parsed = []
@@ -55,11 +71,10 @@ def parse_plan(html):
     for row in rows:
         cols = [c.get_text(strip=True) for c in row.find_all("td")]
 
-        # ❗ POMIŃ wiersze nagłówków i błędne wiersze
+        # pomiń nagłówki i błędne wiersze
         if len(cols) != 11:
             continue
 
-        # ❗ POMIŃ nagłówki pojawiające się w środku tabeli
         header_keywords = ["data", "godz", "grupa", "zajęcia", "forma", "sala", "prowadzący", "uwagi"]
         if any(cols[i].lower() in header_keywords for i in range(len(cols))):
             continue
@@ -68,17 +83,20 @@ def parse_plan(html):
         group_code = extract_group_code(godziny)
 
         parsed.append({
-            "data": cols[1],          # 2025-10-12
-            "od": cols[2],            # 10:45
-            "do": cols[3],            # 12:15
-            "group_code": group_code, # Ćw1N / Ćw2N / WykN
-            "przedmiot": cols[5],     # nazwa przedmiotu
-            "typ": cols[6],           # Cw / Wyk
-            "sala": cols[7],          # sala
-            "prowadzacy": cols[8],    # prowadzący
-            "zaliczenie": cols[9],    # Zaliczenie ocena / Egzamin
-            "uwagi": cols[10],        # Brak / Distance learning / Odwołane
+            "data": cols[1],
+            "od": cols[2],
+            "do": cols[3],
+            "group_code": group_code,
+            "przedmiot": cols[5],
+            "typ": cols[6],
+            "sala": cols[7],
+            "prowadzacy": cols[8],
+            "zaliczenie": cols[9],
+            "uwagi": cols[10],
         })
+
+    if not parsed:
+        return {"error": "Brak danych po przetworzeniu. Spróbuj ponownie."}
 
     return parsed
 
