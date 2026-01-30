@@ -2,7 +2,6 @@ import requests
 from bs4 import BeautifulSoup
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from datetime import datetime
 
 BASE = "https://harmonogramy.dsw.edu.pl"
 TOK_ID = "1199"
@@ -60,6 +59,15 @@ def fetch_html():
     return r.text
 
 
+def extract_group_code(godziny: str) -> str:
+    # np. "MK: PGiA 2st 1sem Ćw2N" → "Ćw2N"
+    parts = godziny.split()
+    if not parts:
+        return ""
+    last = parts[-1]
+    return last  # Ćw1N / Ćw2N / WykN itd.
+
+
 def parse_plan(html):
     soup = BeautifulSoup(html, "html.parser")
     table = soup.find("table", {"id": "gridViewPlanyTokow_DXMainTable"})
@@ -74,11 +82,15 @@ def parse_plan(html):
         if len(cols) < 11:
             continue
 
+        godziny = cols[4]
+        group_code = extract_group_code(godziny)
+
         parsed.append({
             "data": cols[1],
             "od": cols[2],
             "do": cols[3],
-            "godziny": cols[4],
+            "godziny": godziny,
+            "group_code": group_code,  # Ćw1N / Ćw2N / WykN
             "grupa": cols[5],
             "zajecia": cols[6],
             "forma": cols[7],
@@ -99,25 +111,3 @@ def root():
 def get_plan():
     html = fetch_html()
     return parse_plan(html)
-
-
-@app.get("/plan/group/{group_name}")
-def get_plan_for_group(group_name: str):
-    html = fetch_html()
-    data = parse_plan(html)
-    return [item for item in data if item["grupa"] == group_name]
-
-
-@app.get("/plan/range")
-def get_plan_range(start: str, end: str):
-    html = fetch_html()
-    data = parse_plan(html)
-
-    def to_date(d):
-        return datetime.strptime(d, "%Y-%m-%d")
-
-    return [
-        item for item in data
-        if to_date(item["data"]) >= to_date(start)
-        and to_date(item["data"]) <= to_date(end)
-    ]
