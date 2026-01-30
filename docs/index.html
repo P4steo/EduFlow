@@ -2,17 +2,31 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8" />
-  <title>Plan zajęć</title>
+  <title>EduFlow✍️</title>
 
-  <!-- CSS DataTables + minimalny styl -->
   <link rel="stylesheet" href="https://cdn.datatables.net/2.1.8/css/dataTables.dataTables.min.css">
+
   <style>
     body { font-family: system-ui, sans-serif; padding: 20px; }
     h1 { margin-bottom: 20px; }
+    .filters { margin-bottom: 20px; display: flex; gap: 20px; align-items: center; }
   </style>
 </head>
 <body>
+
   <h1>Plan zajęć – tok 1199</h1>
+
+  <div class="filters">
+    <label>Grupa:
+      <select id="groupSelect">
+        <option value="all">Wszystkie</option>
+      </select>
+    </label>
+
+    <label>Od: <input type="date" id="startDate"></label>
+    <label>Do: <input type="date" id="endDate"></label>
+    <button id="filterDateBtn">Filtruj zakres dat</button>
+  </div>
 
   <table id="plan" class="display" style="width:100%">
     <thead>
@@ -34,27 +48,23 @@
 
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <script src="https://cdn.datatables.net/2.1.8/js/dataTables.min.js"></script>
+
   <script>
-    const API_URL = "https://eduflow-qivy.onrender.com/plan"; 
+    const API_URL = "https://eduflow-qivy.onrender.com/plan";
+
+    let table;
 
     async function loadPlan() {
       const res = await fetch(API_URL);
       const data = await res.json();
 
       const rows = data.map(item => [
-        item.data,
-        item.od,
-        item.do,
-        item.godziny,
-        item.grupa,
-        item.zajecia,
-        item.forma,
-        item.sala,
-        item.prowadzacy,
-        item.uwagi
+        item.data, item.od, item.do, item.godziny,
+        item.grupa, item.zajecia, item.forma,
+        item.sala, item.prowadzacy, item.uwagi
       ]);
 
-      const table = $('#plan').DataTable({
+      table = $('#plan').DataTable({
         data: rows,
         columns: [
           { title: "Data" },
@@ -74,10 +84,58 @@
           url: "https://cdn.datatables.net/plug-ins/2.1.8/i18n/pl.json"
         }
       });
+
+      const groups = [...new Set(data.map(item => item.grupa))];
+      const select = document.getElementById("groupSelect");
+
+      groups.forEach(g => {
+        const opt = document.createElement("option");
+        opt.value = g;
+        opt.textContent = g;
+        select.appendChild(opt);
+      });
     }
+
+    document.getElementById("groupSelect").addEventListener("change", async () => {
+      const group = document.getElementById("groupSelect").value;
+
+      let url = API_URL;
+      if (group !== "all") {
+        url = `${API_URL}/group/${group}`;
+      }
+
+      const res = await fetch(url);
+      const data = await res.json();
+
+      table.clear();
+      table.rows.add(data.map(item => [
+        item.data, item.od, item.do, item.godziny,
+        item.grupa, item.zajecia, item.forma,
+        item.sala, item.prowadzacy, item.uwagi
+      ]));
+      table.draw();
+    });
+
+    document.getElementById("filterDateBtn").addEventListener("click", async () => {
+      const start = document.getElementById("startDate").value;
+      const end = document.getElementById("endDate").value;
+
+      if (!start || !end) return;
+
+      const res = await fetch(`${API_URL}/range?start=${start}&end=${end}`);
+      const data = await res.json();
+
+      table.clear();
+      table.rows.add(data.map(item => [
+        item.data, item.od, item.do, item.godziny,
+        item.grupa, item.zajecia, item.forma,
+        item.sala, item.prowadzacy, item.uwagi
+      ]));
+      table.draw();
+    });
 
     loadPlan();
   </script>
+
 </body>
 </html>
-
