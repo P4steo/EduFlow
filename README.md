@@ -19,7 +19,7 @@
 EduFlow to responsywna aplikacja webowa, która pobiera i prezentuje plan zjazdów dla studentów DSW w czytelnej formie kart lub tabeli.  
 Projekt automatycznie analizuje dane z oficjalnego harmonogramu i grupuje je według dni oraz grup.
 
-🔗 **Live demo:** https://twoja-strona.netlify.app  
+🔗 **Live demo:** https://p4steo.github.io/EduFlow/ 
 🔗 **API backend:** https://eduflow-qivy.onrender.com/plan
 
 ---
