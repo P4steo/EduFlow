@@ -274,7 +274,8 @@
       </table>
     </div>
   </main>
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <script src="https://cdn.datatables.net/2.1.8/js/dataTables.min.js"></script>
 
   <script>
@@ -286,6 +287,22 @@
     let currentView = "cards";
     let currentDateMode = "nearest";
     let currentGroup = "all";
+
+    async function fetchPlanWithRetry(retries = 5, delay = 1500) {
+      for (let i = 0; i < retries; i++) {
+        try {
+          const res = await fetch(API_URL);
+          const data = await res.json();
+
+          if (data && !data.error && Array.isArray(data) && data.length > 0) {
+            return data;
+          }
+        } catch (e) {}
+
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+      return null;
+    }
 
     function parseDate(d) {
       return new Date(d);
@@ -302,8 +319,7 @@
         if (!map[item.data]) map[item.data] = [];
         map[item.data].push(item);
       });
-      const entries = Object.entries(map).sort((a, b) => new Date(a[0]) - new Date(b[0]));
-      return entries;
+      return Object.entries(map).sort((a, b) => new Date(a[0]) - new Date(b[0]));
     }
 
     function findWeekendBlocks(data) {
@@ -320,8 +336,7 @@
         if (i + 1 < byDate.length) {
           const [nextDateStr] = byDate[i + 1];
           const nextDate = parseDate(nextDateStr);
-          const diff = (nextDate - date) / (1000 * 60 * 60 * 24);
-          if (diff === 1 && isWeekend(nextDate)) {
+          if ((nextDate - date) / 86400000 === 1 && isWeekend(nextDate)) {
             block.end = nextDateStr;
             block.dates.push(nextDateStr);
           }
@@ -341,7 +356,7 @@
 
       const weekends = findWeekendBlocks(fullData);
       if (weekends.length === 0) {
-        document.getElementById("currentRangeLabel").textContent = "Brak zjazdów w danych";
+        document.getElementById("currentRangeLabel").textContent = "Brak zjazdów";
         return fullData.slice();
       }
 
@@ -353,7 +368,7 @@
         let bestDiff = Infinity;
         weekends.forEach(block => {
           const d = parseDate(block.start);
-          const diff = (d - today) / (1000 * 60 * 60 * 24);
+          const diff = (d - today) / 86400000;
           if (diff >= 0 && diff < bestDiff) {
             bestDiff = diff;
             best = block;
@@ -367,7 +382,7 @@
         let bestDiff = Infinity;
         weekends.forEach(block => {
           const d = parseDate(block.start);
-          const diff = (d - today) / (1000 * 60 * 60 * 24);
+          const diff = (d - today) / 86400000;
           if (diff > 0 && diff < bestDiff) {
             bestDiff = diff;
             best = block;
@@ -379,10 +394,10 @@
       const setDates = new Set(chosen.dates);
       const result = fullData.filter(item => setDates.has(item.data));
 
-      const label = chosen.start === chosen.end
-        ? `Zjazd: ${chosen.start}`
-        : `Zjazd: ${chosen.start} – ${chosen.end}`;
-      document.getElementById("currentRangeLabel").textContent = label;
+      document.getElementById("currentRangeLabel").textContent =
+        chosen.start === chosen.end
+          ? `Zjazd: ${chosen.start}`
+          : `Zjazd: ${chosen.start} – ${chosen.end}`;
 
       return result;
     }
@@ -400,12 +415,9 @@
 
     function filterByGroup(data) {
       if (currentGroup === "all") return data;
-
-      return data.filter(item => {
-        if (item.group_code === currentGroup) return true;
-        if (item.group_code === "WykN") return true;
-        return false;
-      });
+      return data.filter(item =>
+        item.group_code === currentGroup || item.group_code === "WykN"
+      );
     }
 
     function updateNoDataMessage() {
@@ -426,7 +438,6 @@
           base = filterByCustomDates(s, e);
         } else {
           base = fullData.slice();
-          document.getElementById("currentRangeLabel").textContent = "Brak wybranego zakresu dat";
         }
       } else {
         base = filterByDateMode();
@@ -587,12 +598,21 @@
     }
 
     async function init() {
-      try {
-        const res = await fetch(API_URL);
-        fullData = await res.json();
-      } catch (e) {
+      const msg = document.getElementById("noDataMessage");
+      msg.textContent = "Ładowanie danych… proszę czekać.";
+      msg.style.display = "block";
+
+      const data = await fetchPlanWithRetry();
+
+      if (!data) {
+        msg.textContent = "Brak danych z serwera. Spróbuj ponownie za chwilę.";
         fullData = [];
+        filteredData = [];
+        render();
+        return;
       }
+
+      fullData = data;
 
       const groups = [...new Set(
         fullData
@@ -607,6 +627,8 @@
         opt.textContent = g;
         select.appendChild(opt);
       });
+
+      msg.style.display = "none";
 
       applyAllFilters();
     }
