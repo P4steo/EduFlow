@@ -20,6 +20,7 @@ app.add_middleware(
 )
 
 def fetch_html():
+    """Pobiera HTML z DSW z retry."""
     s = requests.Session()
     s.headers.update({"User-Agent": "Mozilla/5.0"})
     s.get(URL_PAGE)
@@ -34,31 +35,37 @@ def fetch_html():
         "id": TOK_ID,
     }
 
-    # 🔁 3 próby pobrania danych
-    for attempt in range(3):
+    for _ in range(3):
         r = s.post(URL_GRID, data=payload)
         r.raise_for_status()
         html = r.text
 
-        # jeśli tabela zawiera <td> → OK
         if "<td" in html.lower():
             return html
 
-        # jeśli nie → poczekaj i spróbuj ponownie
         time.sleep(1)
 
-    # po 3 próbach nadal pusto
     return None
 
 
-def extract_group_code(godziny: str) -> str:
-    parts = godziny.split()
+def extract_text(cell):
+    """Czyści komórkę z linków <a> i zwraca sam tekst."""
+    if cell is None:
+        return ""
+    return cell.get_text(strip=True)
+
+
+def extract_group_code(full_group_name: str) -> str:
+    """Wyciąga Ćw1N / Ćw2N / WykN z pełnej nazwy grupy."""
+    if not full_group_name:
+        return ""
+    parts = full_group_name.split()
     return parts[-1] if parts else ""
 
 
 def parse_plan(html):
     if not html:
-        return {"error": "Brak danych z DSW. Spróbuj ponownie za chwilę."}
+        return {"error": "Brak danych z DSW. Spróbuj ponownie."}
 
     soup = BeautifulSoup(html, "html.parser")
     table = soup.find("table", {"id": "gridViewPlanyTokow_DXMainTable"})
@@ -66,34 +73,69 @@ def parse_plan(html):
         return {"error": "Brak tabeli w danych z DSW."}
 
     rows = table.find_all("tr")
+
     parsed = []
+    current_date = None
 
     for row in rows:
-        cols = [c.get_text(strip=True) for c in row.find_all("td")]
+        classes = row.get("class", [])
 
-        # pomiń nagłówki i błędne wiersze
-        if len(cols) != 11:
+        # 🟦 1. Wiersz grupujący → zawiera datę
+        if "dxgvGroupRow_iOS" in classes:
+            text = row.get_text(" ", strip=True)
+            # Format: "Data Zajęć: 2025.10.25 sobota"
+            if "Data Zajęć:" in text:
+                current_date = text.split("Data Zajęć:")[-1].strip()
             continue
 
-        header_keywords = ["data", "godz", "grupa", "zajęcia", "forma", "sala", "prowadzący", "uwagi"]
-        if any(cols[i].lower() in header_keywords for i in range(len(cols))):
-            continue
+        # 🟦 2. Wiersz danych
+        if "dxgvDataRow_iOS" in classes:
+            cells = row.find_all("td")
 
-        godziny = cols[4]
-        group_code = extract_group_code(godziny)
+            # ignorujemy wiersze bez danych
+            if len(cells) < 10:
+                continue
 
-        parsed.append({
-            "data": cols[1],
-            "od": cols[2],
-            "do": cols[3],
-            "group_code": group_code,
-            "przedmiot": cols[5],
-            "typ": cols[6],
-            "sala": cols[7],
-            "prowadzacy": cols[8],
-            "zaliczenie": cols[9],
-            "uwagi": cols[10],
-        })
+            # struktura dynamiczna:
+            # 0 = indent
+            # 1 = od
+            # 2 = do
+            # 3 = liczba godzin
+            # 4 = grupa
+            # 5 = przedmiot
+            # 6 = forma
+            # 7 = sala
+            # 8 = prowadzący
+            # 9 = forma zaliczenia
+            # 10 = uwagi
+            # 11 = adaptive button (opcjonalnie)
+
+            od = extract_text(cells[1])
+            do = extract_text(cells[2])
+            godziny = extract_text(cells[3])
+            grupa_full = extract_text(cells[4])
+            przedmiot = extract_text(cells[5])
+            forma = extract_text(cells[6])
+            sala = extract_text(cells[7])
+            prowadzacy = extract_text(cells[8])
+            zaliczenie = extract_text(cells[9])
+            uwagi = extract_text(cells[10]) if len(cells) > 10 else ""
+
+            group_code = extract_group_code(grupa_full)
+
+            parsed.append({
+                "data": current_date,
+                "od": od,
+                "do": do,
+                "godziny": godziny,
+                "group_code": group_code,
+                "przedmiot": przedmiot,
+                "typ": forma,
+                "sala": sala,
+                "prowadzacy": prowadzacy,
+                "zaliczenie": zaliczenie,
+                "uwagi": uwagi,
+            })
 
     if not parsed:
         return {"error": "Brak danych po przetworzeniu. Spróbuj ponownie."}
