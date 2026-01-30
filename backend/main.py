@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from datetime import datetime
 
 BASE = "https://harmonogramy.dsw.edu.pl"
 TOK_ID = "1199"
@@ -13,7 +14,12 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://p4steo.github.io",
+        "https://p4steo.github.io/EduFlow",
+        "https://eduflow.com",
+        "https://www.eduflow.com"
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -40,9 +46,7 @@ def fetch_html():
         "DXCallbackName": "gridViewPlanyTokow",
         "__DXCallbackArgument": "c0:KV|2;[];GB|35;14|CUSTOMCALLBACK15|[object Object];",
         "gridViewPlanyTokow": (
-            '{"customOperationState":"iwTcwXXoxNCDCiBzfj3X2QuDjD+ADs6tlFhX/P7bwZQFhL67iwavUFCMUwC4xIL87i5zDEQdaVzhrq48ee1ynlIDZodoNhIhVtLx3/kg5W40LJUeTpalJjmlG2x6VEBOhdHp50XtsPM1PtKWWYsyru0dlFbHI62t/PUcUzeanMkEaFLTQnP5uC0sWYtjCc7b7MAkJGnlmiuNSNuHbhgcKuarpTFkcUFkWs7KoJnR7HkeRzfMsMrZBv3Y1acMgEAi8Yww9UEtRRmVXqpNa7VdKgkvotGlJNMk7eskdGJh4oFpH2UE1+zAnlBpqIrkRffUsLDmqm+Tn/T1l0ecgRvLwM6Hjs1Zc2f2FN2ShjwH8A2+JvaqzE/UOY67s7SZofGrTrq4GaIheQIzE1+ZD8nl3mYHI4x9qDMhfiHRfGSj8lFt7y5xTfCSNHtL+IIRgFdg7uvWQLzU4TL3vnr6XqI5WANH47CWfDOf/fvQ54lIPT2ViDTJCsqoM1FGheL3+pGV3t3OOcExoRWP3H735AZHdOeyZWlJjnA90/AKd3jc7Uzer2sMzmOcCmjo4FP0N1E0Q+XvehBTVdE9y+qnMwZBDGw22pofiEEH1Qsh2JMtWXJ93AwLQBUL6Fiu/SIbS1P/kwjk3e+y6vol1DKqoRmHTH76mAkCzMVxzdtZeT9BOLM=",'
-            '"keys":[],"callbackState":"zT85LZWjEyFRZDPQvzKVlX/7Er5lMQltZyp1z+AgQfWHmfP9HAEGHXFbSXLHHLvNvTGIzODD74yAci5gsfQ27aHPNnxnQ02s0pC/LPzMrzg202aP2UHrppLlyzw84sSaJDIbUEXYkBEMWcJqcO6eJlzk/zHlBj5seUWQR8me1JYIFMTbxKVyjqKYDUjgQAQKZ83FvgkpwuEslKDGMJzx2g84AofOSxo6UsNdW9Dj0pujp4jTBN7vlhyEgMrqFUS+dUiQX2ri2ex52uHea1nK6n0DrsMxqmUu6Jbp8IuR4nDI9AdSGXCvLF24QbLBlbXAw3987qXukW4dbCyVO3ZaHfIT65i44fdyP9IcoUu8EL0k0LYJl5rOJC2OwbJ7NWIRNk3BOLt1vwVuslsn9zJMBCIr8TJFhcHAeuakOESJ07meB5Gr7McFz66hnDBI/S48iZzIUxbSC47KYpx8oFMVojrWmT8tMiDGX23++MHYKSGFPObhN75zWn2HSvbjGg5aWFkIe135DhDDXZ4RrIo0u/bLGEzXggKmJC7REEG35C3xKxJEEj3L+GXP2+endHNG",'
-            '"groupLevelState":{"0":[[0,0],[13,13],[25,25],[33,33],[40,40],[55,55],[76,76],[100,100],[117,117],[124,124],[131,131],[156,156],[175,175],[178,178],[187,187],[196,196],[215,215],[230,230],[254,254],[278,278],[281,281],[290,290],[306,306],[314,314]]},'
+            '{"customOperationState":"","keys":[],"callbackState":"","groupLevelState":{},'
             '"selection":"","toolbar":null}'
         ),
         "gridViewPlanyTokow$custwindowState": '{"windowsState":"0:0:-1:0:0:0:-10000:-10000:1:0:0:0"}',
@@ -86,8 +90,34 @@ def parse_plan(html):
     return parsed
 
 
+@app.get("/")
+def root():
+    return {"status": "ok", "message": "EduFlow backend running"}
+
+
 @app.get("/plan")
 def get_plan():
     html = fetch_html()
+    return parse_plan(html)
+
+
+@app.get("/plan/group/{group_name}")
+def get_plan_for_group(group_name: str):
+    html = fetch_html()
     data = parse_plan(html)
-    return data
+    return [item for item in data if item["grupa"] == group_name]
+
+
+@app.get("/plan/range")
+def get_plan_range(start: str, end: str):
+    html = fetch_html()
+    data = parse_plan(html)
+
+    def to_date(d):
+        return datetime.strptime(d, "%Y-%m-%d")
+
+    return [
+        item for item in data
+        if to_date(item["data"]) >= to_date(start)
+        and to_date(item["data"]) <= to_date(end)
+    ]
