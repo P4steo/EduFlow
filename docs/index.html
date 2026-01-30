@@ -110,7 +110,16 @@
       color: var(--text-muted);
     }
 
-    /* TABLE VIEW */
+    #noDataMessage {
+      margin-bottom: 12px;
+      font-size: 13px;
+      color: var(--text-muted);
+      padding: 8px 10px;
+      border-radius: 6px;
+      background: #e5e7eb;
+      display: none;
+    }
+
     #tableContainer {
       display: none;
     }
@@ -119,11 +128,6 @@
       background: var(--danger-soft) !important;
     }
 
-    table.dataTable tbody tr.day-separator-row td {
-      border-top: 2px solid var(--day-separator) !important;
-    }
-
-    /* CARD VIEW */
     #cardsContainer {
       display: flex;
       flex-direction: column;
@@ -245,6 +249,10 @@
       <span id="currentRangeLabel"></span>
     </div>
 
+    <div id="noDataMessage">
+      Brak danych do wyświetlenia. Wybierz inną datę lub poczekaj – dane są generowane.
+    </div>
+
     <div id="cardsContainer"></div>
 
     <div id="tableContainer">
@@ -266,8 +274,7 @@
       </table>
     </div>
   </main>
-
-  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <script src="https://cdn.datatables.net/2.1.8/js/dataTables.min.js"></script>
 
   <script>
@@ -281,12 +288,11 @@
     let currentGroup = "all";
 
     function parseDate(d) {
-      // backend zwraca np. "2025-10-12"
       return new Date(d);
     }
 
     function isWeekend(date) {
-      const day = date.getDay(); // 0 = niedziela, 6 = sobota
+      const day = date.getDay();
       return day === 0 || day === 6;
     }
 
@@ -305,13 +311,12 @@
       const weekends = [];
 
       for (let i = 0; i < byDate.length; i++) {
-        const [dateStr, items] = byDate[i];
+        const [dateStr] = byDate[i];
         const date = parseDate(dateStr);
         if (!isWeekend(date)) continue;
 
         const block = { start: dateStr, end: dateStr, dates: [dateStr] };
 
-        // sprawdź sąsiedni dzień (sobota + niedziela)
         if (i + 1 < byDate.length) {
           const [nextDateStr] = byDate[i + 1];
           const nextDate = parseDate(nextDateStr);
@@ -330,11 +335,15 @@
 
     function filterByDateMode() {
       if (currentDateMode === "all") {
+        document.getElementById("currentRangeLabel").textContent = "Cały semestr";
         return fullData.slice();
       }
 
       const weekends = findWeekendBlocks(fullData);
-      if (weekends.length === 0) return fullData.slice();
+      if (weekends.length === 0) {
+        document.getElementById("currentRangeLabel").textContent = "Brak zjazdów w danych";
+        return fullData.slice();
+      }
 
       const today = new Date();
       let chosen = weekends[0];
@@ -399,6 +408,15 @@
       });
     }
 
+    function updateNoDataMessage() {
+      const msg = document.getElementById("noDataMessage");
+      if (!filteredData || filteredData.length === 0) {
+        msg.style.display = "block";
+      } else {
+        msg.style.display = "none";
+      }
+    }
+
     function applyAllFilters() {
       let base;
       if (currentDateMode === "custom") {
@@ -408,12 +426,14 @@
           base = filterByCustomDates(s, e);
         } else {
           base = fullData.slice();
+          document.getElementById("currentRangeLabel").textContent = "Brak wybranego zakresu dat";
         }
       } else {
         base = filterByDateMode();
       }
 
       filteredData = filterByGroup(base);
+      updateNoDataMessage();
       render();
     }
 
@@ -450,7 +470,7 @@
           const card = document.createElement("div");
           card.className = "card";
 
-          const uwagiLower = (item.uwagi || "").toLowerCase();
+          const uwagiLower = ((item.uwagi || "") + " " + (item.zaliczenie || "")).toLowerCase();
           if (uwagiLower.includes("odwołane")) {
             card.classList.add("cancelled");
           }
@@ -477,22 +497,27 @@
 
           const main = document.createElement("div");
           main.className = "card-main";
-          main.textContent = item.zajecia || "Zajęcia";
+          main.textContent = item.przedmiot || "Zajęcia";
           card.appendChild(main);
 
           const meta = document.createElement("div");
           meta.className = "card-meta";
           meta.innerHTML = `
-            <span>${item.forma || ""}</span>
+            <span>${item.typ || ""}</span>
             <span>${item.sala || ""}</span>
             <span>${item.prowadzacy || ""}</span>
           `;
           card.appendChild(meta);
 
-          if (item.uwagi) {
+          const uwagiParts = [];
+          if (item.zaliczenie) uwagiParts.push(item.zaliczenie);
+          if (item.uwagi && item.uwagi.toLowerCase() !== "brak") uwagiParts.push(item.uwagi);
+          const uwagiDisplay = uwagiParts.join(", ");
+
+          if (uwagiDisplay) {
             const uw = document.createElement("div");
             uw.className = "card-uwagi";
-            uw.textContent = item.uwagi;
+            uw.textContent = uwagiDisplay;
             card.appendChild(uw);
           }
 
@@ -510,17 +535,24 @@
           if (d !== 0) return d;
           return a.od.localeCompare(b.od);
         })
-        .map(item => [
-          item.data,
-          item.od,
-          item.do,
-          item.group_code || "",
-          item.zajecia,
-          item.forma,
-          item.sala,
-          item.prowadzacy,
-          item.uwagi
-        ]);
+        .map(item => {
+          const uwagiParts = [];
+          if (item.zaliczenie) uwagiParts.push(item.zaliczenie);
+          if (item.uwagi && item.uwagi.toLowerCase() !== "brak") uwagiParts.push(item.uwagi);
+          const uwagiDisplay = uwagiParts.join(", ");
+
+          return [
+            item.data,
+            item.od,
+            item.do,
+            item.group_code || "",
+            item.przedmiot,
+            item.typ,
+            item.sala,
+            item.prowadzacy,
+            uwagiDisplay
+          ];
+        });
 
       if (!table) {
         table = $('#planTable').DataTable({
@@ -555,8 +587,12 @@
     }
 
     async function init() {
-      const res = await fetch(API_URL);
-      fullData = await res.json();
+      try {
+        const res = await fetch(API_URL);
+        fullData = await res.json();
+      } catch (e) {
+        fullData = [];
+      }
 
       const groups = [...new Set(
         fullData
