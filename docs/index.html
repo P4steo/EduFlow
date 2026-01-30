@@ -306,431 +306,449 @@
 
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <script src="https://cdn.datatables.net/2.1.8/js/dataTables.min.js"></script>
+<script>
+const API_URL = "https://eduflow-qivy.onrender.com/plan";
 
-  <script>
-    const API_URL = "https://eduflow-qivy.onrender.com/plan";
+let fullData = [];
+let filteredData = [];
+let table = null;
+let currentView = "cards";
+let currentDateMode = "nearest";
+let currentGroup = "all";
+let lastTimestamp = null;
 
-    let fullData = [];
-    let filteredData = [];
-    let table = null;
-    let currentView = "cards";
-    let currentDateMode = "nearest";
-    let currentGroup = "all";
-    let lastTimestamp = null;
+// -----------------------------
+// Retry + pobieranie danych
+// -----------------------------
+async function fetchPlanWithRetry(retries = 5, delay = 1500) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const res = await fetch(API_URL);
+      const json = await res.json();
 
-    // -----------------------------
-    // Retry + pobieranie danych
-    // -----------------------------
-    async function fetchPlanWithRetry(retries = 5, delay = 1500) {
-      for (let i = 0; i < retries; i++) {
-        try {
-          const res = await fetch(API_URL);
-          const json = await res.json();
-
-          if (json && json.data && Array.isArray(json.data) && json.data.length > 0) {
-            lastTimestamp = json.timestamp;
-            return json.data;
-          }
-        } catch (e) {}
-
-        await new Promise(resolve => setTimeout(resolve, delay));
+      if (json && json.data && Array.isArray(json.data) && json.data.length > 0) {
+        lastTimestamp = json.timestamp;
+        return json.data;
       }
-      return null;
+    } catch (e) {}
+
+    await new Promise(resolve => setTimeout(resolve, delay));
+  }
+  return null;
+}
+
+// -----------------------------
+// Weekend helpers
+// -----------------------------
+function nextWeekendDate(fromDate = new Date()) {
+  const d = new Date(fromDate);
+  while (true) {
+    const day = d.getDay();
+    if (day === 6 || day === 0) return d;
+    d.setDate(d.getDate() + 1);
+  }
+}
+
+// Najbliższy zjazd = sobota + niedziela
+function findNearestWeekendRange() {
+  let d = new Date();
+
+  for (let i = 0; i < 60; i++) {
+    const saturday = nextWeekendDate(d);
+    const sunday = new Date(saturday);
+
+    if (saturday.getDay() === 6) {
+      sunday.setDate(saturday.getDate() + 1);
+    } else {
+      saturday.setDate(saturday.getDate() - 1);
     }
 
-    // -----------------------------
-    // Weekend helpers
-    // -----------------------------
-    function nextWeekendDate(fromDate = new Date()) {
-      const d = new Date(fromDate);
-      while (true) {
-        const day = d.getDay();
-        if (day === 6 || day === 0) return d;
-        d.setDate(d.getDate() + 1);
-      }
+    const satStr = saturday.toISOString().split("T")[0].replace(/-/g, ".");
+    const sunStr = sunday.toISOString().split("T")[0].replace(/-/g, ".");
+
+    const hasSat = fullData.some(item => item.data.includes(satStr));
+    const hasSun = fullData.some(item => item.data.includes(sunStr));
+
+    if (hasSat || hasSun) {
+      return { sat: satStr, sun: sunStr };
     }
 
-    function findNearestWeekendWithData() {
-      let d = new Date();
+    d.setDate(saturday.getDate() + 2);
+  }
 
-      for (let i = 0; i < 60; i++) {
-        const weekend = nextWeekendDate(d);
-        const dateStr = weekend.toISOString().split("T")[0].replace(/-/g, ".");
+  return null;
+}
 
-        const hasData = fullData.some(item => item.data.includes(dateStr));
-        if (hasData) return dateStr;
+// Następny zjazd = +7 dni
+function findNextWeekendRange(currentRange) {
+  const [y, m, d] = currentRange.sat.split(".").map(Number);
+  const nextSat = new Date(y, m - 1, d + 7);
+  const nextSun = new Date(nextSat);
+  nextSun.setDate(nextSat.getDate() + 1);
 
-        weekend.setDate(weekend.getDate() + 1);
-        d = weekend;
-      }
-      return null;
+  const satStr = nextSat.toISOString().split("T")[0].replace(/-/g, ".");
+  const sunStr = nextSun.toISOString().split("T")[0].replace(/-/g, ".");
+
+  return { sat: satStr, sun: sunStr };
+}
+
+// -----------------------------
+// Filtrowanie dat
+// -----------------------------
+function filterByDateMode() {
+  if (currentDateMode === "all") {
+    document.getElementById("currentRangeLabel").textContent = "Cały semestr";
+    return fullData.slice();
+  }
+
+  const nearest = findNearestWeekendRange();
+  if (!nearest) {
+    document.getElementById("currentRangeLabel").textContent = "Brak zjazdów w danych";
+    return [];
+  }
+
+  if (currentDateMode === "nearest") {
+    document.getElementById("currentRangeLabel").textContent =
+      `Najbliższy zjazd: ${nearest.sat} – ${nearest.sun}`;
+
+    return fullData.filter(item =>
+      item.data.includes(nearest.sat) || item.data.includes(nearest.sun)
+    );
+  }
+
+  if (currentDateMode === "next") {
+    const next = findNextWeekendRange(nearest);
+
+    document.getElementById("currentRangeLabel").textContent =
+      `Następny zjazd: ${next.sat} – ${next.sun}`;
+
+    return fullData.filter(item =>
+      item.data.includes(next.sat) || item.data.includes(next.sun)
+    );
+  }
+
+  return fullData.slice();
+}
+
+function filterByCustomDates(start, end) {
+  const s = new Date(start);
+  const e = new Date(end);
+  const result = fullData.filter(item => {
+    const d = new Date(item.data.replace(/\./g, "-"));
+    return d >= s && d <= e;
+  });
+  document.getElementById("currentRangeLabel").textContent = `Zakres: ${start} – ${end}`;
+  return result;
+}
+
+function filterByGroup(data) {
+  if (currentGroup === "all") return data;
+  return data.filter(item =>
+    item.group_code === currentGroup || item.group_code === "WykN"
+  );
+}
+
+// -----------------------------
+// Renderowanie
+// -----------------------------
+function updateNoDataMessage() {
+  const msg = document.getElementById("noDataMessage");
+  if (!filteredData || filteredData.length === 0) {
+    msg.style.display = "block";
+  } else {
+    msg.style.display = "none";
+  }
+}
+
+function applyAllFilters() {
+  let base;
+
+  if (currentDateMode === "custom") {
+    const s = document.getElementById("startDate").value;
+    const e = document.getElementById("endDate").value;
+    if (s && e) {
+      base = filterByCustomDates(s, e);
+    } else {
+      base = fullData.slice();
+    }
+  } else {
+    base = filterByDateMode();
+  }
+
+  filteredData = filterByGroup(base);
+  updateNoDataMessage();
+  render();
+}
+
+function render() {
+  if (currentView === "cards") {
+    document.getElementById("cardsContainer").style.display = "flex";
+    document.getElementById("tableContainer").style.display = "none";
+    renderCards();
+  } else {
+    document.getElementById("cardsContainer").style.display = "none";
+    document.getElementById("tableContainer").style.display = "block";
+    renderTable();
+  }
+}
+
+function groupByDate(data) {
+  const map = {};
+  data.forEach(item => {
+    if (!map[item.data]) map[item.data] = [];
+    map[item.data].push(item);
+  });
+  return Object.entries(map).sort((a, b) => new Date(a[0]) - new Date(b[0]));
+}
+
+function renderCards() {
+  const container = document.getElementById("cardsContainer");
+  container.innerHTML = "";
+
+  const byDate = groupByDate(filteredData);
+
+  byDate.forEach(([dateStr, items], i) => {
+    if (i > 0) {
+      const sep = document.createElement("hr");
+      sep.style.margin = "10px 0";
+      container.appendChild(sep);
     }
 
-    function findNextWeekendWithData(afterDateStr) {
-      const [y, m, d] = afterDateStr.split(".").map(Number);
-      let date = new Date(y, m - 1, d + 1);
+    const dayBlock = document.createElement("div");
+    dayBlock.className = "day-block";
 
-      for (let i = 0; i < 60; i++) {
-        const weekend = nextWeekendDate(date);
-        const dateStr = weekend.toISOString().split("T")[0].replace(/-/g, ".");
+    const title = document.createElement("div");
+    title.className = "day-title";
+    title.textContent = dateStr;
+    dayBlock.appendChild(title);
 
-        const hasData = fullData.some(item => item.data.includes(dateStr));
-        if (hasData) return dateStr;
+    items.sort((a, b) => a.od.localeCompare(b.od));
 
-        weekend.setDate(weekend.getDate() + 1);
-        date = weekend;
-      }
-      return null;
-    }
+    items.forEach(item => {
+      const card = document.createElement("div");
+      card.className = "card";
 
-    // -----------------------------
-    // Filtrowanie dat
-    // -----------------------------
-    function filterByDateMode() {
-      if (currentDateMode === "all") {
-        document.getElementById("currentRangeLabel").textContent = "Cały semestr";
-        return fullData.slice();
+      const uwagiLower = ((item.uwagi || "") + " " + (item.zaliczenie || "")).toLowerCase();
+      if (uwagiLower.includes("odwołane")) {
+        card.classList.add("cancelled");
       }
 
-      const nearest = findNearestWeekendWithData();
-      if (!nearest) {
-        document.getElementById("currentRangeLabel").textContent = "Brak zjazdów w danych";
-        return [];
+      const top = document.createElement("div");
+      top.className = "card-top";
+
+      const time = document.createElement("div");
+      time.className = "time";
+      time.textContent = `${item.od}–${item.do}`;
+      top.appendChild(time);
+
+      const tag = document.createElement("div");
+      tag.className = "group-tag";
+      if (item.group_code) {
+        tag.classList.add(`group-${item.group_code}`);
+        tag.textContent = item.group_code;
+      } else {
+        tag.textContent = "—";
+      }
+      top.appendChild(tag);
+
+      card.appendChild(top);
+
+      const main = document.createElement("div");
+      main.className = "card-main";
+      main.textContent = item.przedmiot || "Zajęcia";
+      card.appendChild(main);
+
+      const meta = document.createElement("div");
+      meta.className = "card-meta";
+      meta.innerHTML = `
+        <span>${item.typ || ""}</span>
+        <span>${item.sala || ""}</span>
+        <span>${item.prowadzacy || ""}</span>
+      `;
+      card.appendChild(meta);
+
+      const uwagiParts = [];
+      if (item.zaliczenie) uwagiParts.push(item.zaliczenie);
+      if (item.uwagi && item.uwagi.toLowerCase() !== "brak") uwagiParts.push(item.uwagi);
+      const uwagiDisplay = uwagiParts.join(", ");
+
+      if (uwagiDisplay) {
+        const uw = document.createElement("div");
+        uw.className = "card-uwagi";
+        uw.textContent = uwagiDisplay;
+        card.appendChild(uw);
       }
 
-      if (currentDateMode === "nearest") {
-        document.getElementById("currentRangeLabel").textContent = `Najbliższy zjazd: ${nearest}`;
-        return fullData.filter(item => item.data.includes(nearest));
-      }
+      dayBlock.appendChild(card);
+    });
 
-      if (currentDateMode === "next") {
-        const next = findNextWeekendWithData(nearest);
-        if (!next) {
-          document.getElementById("currentRangeLabel").textContent = "Brak kolejnego zjazdu";
-          return [];
+    container.appendChild(dayBlock);
+  });
+}
+
+function renderTable() {
+  const rows = filteredData
+    .sort((a, b) => {
+      const d = new Date(a.data.replace(/\./g, "-")) - new Date(b.data.replace(/\./g, "-"));
+      if (d !== 0) return d;
+      return a.od.localeCompare(b.od);
+    })
+    .map(item => {
+      const uwagiParts = [];
+      if (item.zaliczenie) uwagiParts.push(item.zaliczenie);
+      if (item.uwagi && item.uwagi.toLowerCase() !== "brak") uwagiParts.push(item.uwagi);
+      const uwagiDisplay = uwagiParts.join(", ");
+
+      return [
+        item.data,
+        item.od,
+        item.do,
+        item.group_code || "",
+        item.przedmiot,
+        item.typ,
+        item.sala,
+        item.prowadzacy,
+        uwagiDisplay
+      ];
+    });
+
+  if (!table) {
+    table = $('#planTable').DataTable({
+      data: rows,
+      columns: [
+        { title: "Data" },
+        { title: "Od" },
+        { title: "Do" },
+        { title: "Grupa" },
+        { title: "Zajęcia" },
+        { title: "Forma" },
+        { title: "Sala" },
+        { title: "Prowadzący" },
+        { title: "Uwagi" }
+      ],
+      pageLength: 50,
+      language: {
+        url: "https://cdn.datatables.net/plug-ins/2.1.8/i18n/pl.json"
+      },
+      createdRow: function (row, data) {
+        const uwagi = (data[8] || "").toLowerCase();
+        if (uwagi.includes("odwołane")) {
+          row.classList.add("cancelled");
         }
-        document.getElementById("currentRangeLabel").textContent = `Następny zjazd: ${next}`;
-        return fullData.filter(item => item.data.includes(next));
       }
-
-      return fullData.slice();
-    }
-
-    function filterByCustomDates(start, end) {
-      const s = new Date(start);
-      const e = new Date(end);
-      const result = fullData.filter(item => {
-        const d = new Date(item.data.replace(/\./g, "-"));
-        return d >= s && d <= e;
-      });
-      document.getElementById("currentRangeLabel").textContent = `Zakres: ${start} – ${end}`;
-      return result;
-    }
-
-    function filterByGroup(data) {
-      if (currentGroup === "all") return data;
-      return data.filter(item =>
-        item.group_code === currentGroup || item.group_code === "WykN"
-      );
-    }
-
-    // -----------------------------
-    // Renderowanie
-    // -----------------------------
-    function updateNoDataMessage() {
-      const msg = document.getElementById("noDataMessage");
-      if (!filteredData || filteredData.length === 0) {
-        msg.style.display = "block";
-      } else {
-        msg.style.display = "none";
-      }
-    }
-
-    function applyAllFilters() {
-      let base;
-
-      if (currentDateMode === "custom") {
-        const s = document.getElementById("startDate").value;
-        const e = document.getElementById("endDate").value;
-        if (s && e) {
-          base = filterByCustomDates(s, e);
-        } else {
-          base = fullData.slice();
-        }
-      } else {
-        base = filterByDateMode();
-      }
-
-      filteredData = filterByGroup(base);
-      updateNoDataMessage();
-      render();
-    }
-
-    function render() {
-      if (currentView === "cards") {
-        document.getElementById("cardsContainer").style.display = "flex";
-        document.getElementById("tableContainer").style.display = "none";
-        renderCards();
-      } else {
-        document.getElementById("cardsContainer").style.display = "none";
-        document.getElementById("tableContainer").style.display = "block";
-        renderTable();
-      }
-    }
-
-    function groupByDate(data) {
-      const map = {};
-      data.forEach(item => {
-        if (!map[item.data]) map[item.data] = [];
-        map[item.data].push(item);
-      });
-      return Object.entries(map).sort((a, b) => new Date(a[0]) - new Date(b[0]));
-    }
-
-    function renderCards() {
-      const container = document.getElementById("cardsContainer");
-      container.innerHTML = "";
-
-      const byDate = groupByDate(filteredData);
-
-      byDate.forEach(([dateStr, items]) => {
-        const dayBlock = document.createElement("div");
-        dayBlock.className = "day-block";
-
-        const title = document.createElement("div");
-        title.className = "day-title";
-        title.textContent = dateStr;
-        dayBlock.appendChild(title);
-
-        items.sort((a, b) => a.od.localeCompare(b.od));
-
-        items.forEach(item => {
-          const card = document.createElement("div");
-          card.className = "card";
-
-          const uwagiLower = ((item.uwagi || "") + " " + (item.zaliczenie || "")).toLowerCase();
-          if (uwagiLower.includes("odwołane")) {
-            card.classList.add("cancelled");
-          }
-
-          const top = document.createElement("div");
-          top.className = "card-top";
-
-          const time = document.createElement("div");
-          time.className = "time";
-          time.textContent = `${item.od}–${item.do}`;
-          top.appendChild(time);
-
-          const tag = document.createElement("div");
-          tag.className = "group-tag";
-          if (item.group_code) {
-            tag.classList.add(`group-${item.group_code}`);
-            tag.textContent = item.group_code;
-          } else {
-            tag.textContent = "—";
-          }
-          top.appendChild(tag);
-
-          card.appendChild(top);
-
-          const main = document.createElement("div");
-          main.className = "card-main";
-          main.textContent = item.przedmiot || "Zajęcia";
-          card.appendChild(main);
-
-          const meta = document.createElement("div");
-          meta.className = "card-meta";
-          meta.innerHTML = `
-            <span>${item.typ || ""}</span>
-            <span>${item.sala || ""}</span>
-            <span>${item.prowadzacy || ""}</span>
-          `;
-          card.appendChild(meta);
-
-          const uwagiParts = [];
-          if (item.zaliczenie) uwagiParts.push(item.zaliczenie);
-          if (item.uwagi && item.uwagi.toLowerCase() !== "brak") uwagiParts.push(item.uwagi);
-          const uwagiDisplay = uwagiParts.join(", ");
-
-          if (uwagiDisplay) {
-            const uw = document.createElement("div");
-            uw.className = "card-uwagi";
-            uw.textContent = uwagiDisplay;
-            card.appendChild(uw);
-          }
-
-          dayBlock.appendChild(card);
-        });
-
-        container.appendChild(dayBlock);
-      });
-    }
-
-    function renderTable() {
-      const rows = filteredData
-        .sort((a, b) => {
-          const d = new Date(a.data.replace(/\./g, "-")) - new Date(b.data.replace(/\./g, "-"));
-          if (d !== 0) return d;
-          return a.od.localeCompare(b.od);
-        })
-        .map(item => {
-          const uwagiParts = [];
-          if (item.zaliczenie) uwagiParts.push(item.zaliczenie);
-          if (item.uwagi && item.uwagi.toLowerCase() !== "brak") uwagiParts.push(item.uwagi);
-          const uwagiDisplay = uwagiParts.join(", ");
-
-          return [
-            item.data,
-            item.od,
-            item.do,
-            item.group_code || "",
-            item.przedmiot,
-            item.typ,
-            item.sala,
-            item.prowadzacy,
-            uwagiDisplay
-          ];
-        });
-
-      if (!table) {
-        table = $('#planTable').DataTable({
-          data: rows,
-          columns: [
-            { title: "Data" },
-            { title: "Od" },
-            { title: "Do" },
-            { title: "Grupa" },
-            { title: "Zajęcia" },
-            { title: "Forma" },
-            { title: "Sala" },
-            { title: "Prowadzący" },
-            { title: "Uwagi" }
-          ],
-          pageLength: 50,
-          language: {
-            url: "https://cdn.datatables.net/plug-ins/2.1.8/i18n/pl.json"
-          },
-          createdRow: function (row, data) {
-            const uwagi = (data[8] || "").toLowerCase();
-            if (uwagi.includes("odwołane")) {
-              row.classList.add("cancelled");
-            }
-          }
-        });
-      } else {
-        table.clear();
-        table.rows.add(rows);
-        table.draw();
-      }
-    }
-
-    // -----------------------------
-    // INIT
-    // -----------------------------
-    async function init() {
-      document.getElementById("noDataMessage").textContent = "Ładowanie danych…";
-      document.getElementById("noDataMessage").style.display = "block";
-
-      const data = await fetchPlanWithRetry();
-
-      if (!data) {
-        document.getElementById("noDataMessage").textContent =
-          "Brak danych z serwera. Spróbuj ponownie.";
-        return;
-      }
-
-      fullData = data;
-
-      // status
-      document.getElementById("statusBox").textContent =
-        "Dane zaktualizowano: " +
-        new Date(lastTimestamp * 1000).toLocaleString("pl-PL");
-
-      // grupy
-      const groups = [...new Set(
-        fullData
-          .map(i => i.group_code)
-          .filter(code => code && code.startsWith("Ćw"))
-      )].sort();
-
-      const select = document.getElementById("groupSelect");
-      groups.forEach(g => {
-        const opt = document.createElement("option");
-        opt.value = g;
-        opt.textContent = g;
-        select.appendChild(opt);
-      });
-
-      document.getElementById("noDataMessage").style.display = "none";
-
-      applyAllFilters();
-    }
-
-    // -----------------------------
-    // Eventy
-    // -----------------------------
-    document.getElementById("groupSelect").addEventListener("change", e => {
-      currentGroup = e.target.value;
-      applyAllFilters();
     });
+  } else {
+    table.clear();
+    table.rows.add(rows);
+    table.draw();
+  }
+}
 
-    document.querySelectorAll(".date-mode-btn").forEach(btn => {
-      btn.addEventListener("click", () => {
-        document.querySelectorAll(".date-mode-btn").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        currentDateMode = btn.dataset.mode;
-        document.getElementById("customDates").style.display =
-          currentDateMode === "custom" ? "block" : "none";
-        applyAllFilters();
-      });
-    });
+// -----------------------------
+// INIT
+// -----------------------------
+async function init() {
+  document.getElementById("noDataMessage").textContent = "Ładowanie danych…";
+  document.getElementById("noDataMessage").style.display = "block";
 
-    document.getElementById("applyCustomDates").addEventListener("click", () => {
-      currentDateMode = "custom";
-      applyAllFilters();
-    });
+  const data = await fetchPlanWithRetry();
 
-    document.getElementById("viewCards").addEventListener("click", () => {
-      currentView = "cards";
-      document.getElementById("viewCards").classList.add("active");
-      document.getElementById("viewTable").classList.remove("active");
-      render();
-    });
+  if (!data) {
+    document.getElementById("noDataMessage").textContent =
+      "Brak danych z serwera. Spróbuj ponownie.";
+    return;
+  }
 
-    document.getElementById("viewTable").addEventListener("click", () => {
-      currentView = "table";
-      document.getElementById("viewTable").classList.add("active");
-      document.getElementById("viewCards").classList.remove("active");
-      render();
-    });
+  fullData = data;
 
-    // -----------------------------
-    // Przycisk: Załaduj ponownie dane
-    // -----------------------------
-    document.getElementById("reloadBtn").addEventListener("click", async () => {
-      document.getElementById("statusBox").textContent = "Odświeżanie…";
-      document.getElementById("noDataMessage").style.display = "block";
-      document.getElementById("noDataMessage").textContent = "Ładowanie danych…";
+  document.getElementById("statusBox").textContent =
+    "Dane zaktualizowano: " +
+    new Date(lastTimestamp * 1000).toLocaleString("pl-PL");
 
-      const data = await fetchPlanWithRetry();
+  const groups = [...new Set(
+    fullData
+      .map(i => i.group_code)
+      .filter(code => code && code.startsWith("Ćw"))
+  )].sort();
 
-      if (!data) {
-        document.getElementById("noDataMessage").textContent =
-          "Brak danych z serwera. Spróbuj ponownie.";
-        return;
-      }
+  const select = document.getElementById("groupSelect");
+  groups.forEach(g => {
+    const opt = document.createElement("option");
+    opt.value = g;
+    opt.textContent = g;
+    select.appendChild(opt);
+  });
 
-      fullData = data;
+  document.getElementById("noDataMessage").style.display = "none";
 
-      document.getElementById("statusBox").textContent =
-        "Dane zaktualizowano: " +
-        new Date(lastTimestamp * 1000).toLocaleString("pl-PL");
+  applyAllFilters();
+}
 
-      applyAllFilters();
-    });
+// -----------------------------
+// Eventy
+// -----------------------------
+document.getElementById("groupSelect").addEventListener("change", e => {
+  currentGroup = e.target.value;
+  applyAllFilters();
+});
 
-    init();
-  </script>
+document.querySelectorAll(".date-mode-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".date-mode-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    currentDateMode = btn.dataset.mode;
+    document.getElementById("customDates").style.display =
+      currentDateMode === "custom" ? "block" : "none";
+    applyAllFilters();
+  });
+});
+
+document.getElementById("applyCustomDates").addEventListener("click", () => {
+  currentDateMode = "custom";
+  applyAllFilters();
+});
+
+document.getElementById("viewCards").addEventListener("click", () => {
+  currentView = "cards";
+  document.getElementById("viewCards").classList.add("active");
+  document.getElementById("viewTable").classList.remove("active");
+  render();
+});
+
+document.getElementById("viewTable").addEventListener("click", () => {
+  currentView = "table";
+  document.getElementById("viewTable").classList.add("active");
+  document.getElementById("viewCards").classList.remove("active");
+  render();
+});
+
+// -----------------------------
+// Przycisk: Załaduj ponownie dane
+// -----------------------------
+document.getElementById("reloadBtn").addEventListener("click", async () => {
+  document.getElementById("statusBox").textContent = "Odświeżanie…";
+  document.getElementById("noDataMessage").style.display = "block";
+  document.getElementById("noDataMessage").textContent = "Ładowanie danych…";
+
+  const data = await fetchPlanWithRetry();
+
+  if (!data) {
+    document.getElementById("noDataMessage").textContent =
+      "Brak danych z serwera. Spróbuj ponownie.";
+    return;
+  }
+
+  fullData = data;
+
+  document.getElementById("statusBox").textContent =
+    "Dane zaktualizowano: " +
+    new Date(lastTimestamp * 1000).toLocaleString("pl-PL");
+
+  applyAllFilters();
+});
+
+init();
+</script>
 
 </body>
 </html>
