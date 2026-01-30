@@ -10,6 +10,15 @@ TOK_ID = "1199"
 URL_PAGE = f"{BASE}/Plany/PlanyTokow/{TOK_ID}"
 URL_GRID = f"{BASE}/Plany/PlanyTokowGridCustom/{TOK_ID}"
 
+# -----------------------------
+#   CACHE (pełny: TTL + fallback)
+# -----------------------------
+CACHE = {
+    "data": None,          # ostatnie poprawne dane (lista zajęć)
+    "timestamp": 0,        # czas zapisania (time.time())
+    "ttl": 300             # 5 minut
+}
+
 app = FastAPI()
 
 app.add_middleware(
@@ -19,8 +28,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+# -----------------------------
+#   Pobieranie HTML z retry
+# -----------------------------
 def fetch_html():
-    """Pobiera HTML z DSW z retry."""
     s = requests.Session()
     s.headers.update({"User-Agent": "Mozilla/5.0"})
     s.get(URL_PAGE)
@@ -35,7 +47,7 @@ def fetch_html():
         "id": TOK_ID,
     }
 
-    for _ in range(3):
+    for attempt in range(3):
         r = s.post(URL_GRID, data=payload)
         r.raise_for_status()
         html = r.text
@@ -48,29 +60,31 @@ def fetch_html():
     return None
 
 
+# -----------------------------
+#   Pomocnicze funkcje
+# -----------------------------
 def extract_text(cell):
-    """Czyści komórkę z linków <a> i zwraca sam tekst."""
-    if cell is None:
-        return ""
-    return cell.get_text(strip=True)
+    return cell.get_text(strip=True) if cell else ""
 
 
 def extract_group_code(full_group_name: str) -> str:
-    """Wyciąga Ćw1N / Ćw2N / WykN z pełnej nazwy grupy."""
     if not full_group_name:
         return ""
     parts = full_group_name.split()
     return parts[-1] if parts else ""
 
 
+# -----------------------------
+#   Parser odporny na zmiany
+# -----------------------------
 def parse_plan(html):
     if not html:
-        return {"error": "Brak danych z DSW. Spróbuj ponownie."}
+        return None
 
     soup = BeautifulSoup(html, "html.parser")
     table = soup.find("table", {"id": "gridViewPlanyTokow_DXMainTable"})
     if not table:
-        return {"error": "Brak tabeli w danych z DSW."}
+        return None
 
     rows = table.find_all("tr")
 
@@ -80,28 +94,32 @@ def parse_plan(html):
     for row in rows:
         classes = row.get("class", [])
 
-        # 🟦 1. Wiersz grupujący → zawiera datę
+        # -----------------------------
+        #   Wiersz grupujący (DATA)
+        # -----------------------------
         if "dxgvGroupRow_iOS" in classes:
             text = row.get_text(" ", strip=True)
-            # Format: "Data Zajęć: 2025.10.25 sobota"
+            # np. "Data Zajęć: 2025.10.25 sobota"
             if "Data Zajęć:" in text:
                 current_date = text.split("Data Zajęć:")[-1].strip()
             continue
 
-        # 🟦 2. Wiersz danych
+        # -----------------------------
+        #   Wiersz danych
+        # -----------------------------
         if "dxgvDataRow_iOS" in classes:
             cells = row.find_all("td")
 
-            # ignorujemy wiersze bez danych
+            # minimalna liczba komórek, żeby mieć sensowne dane
             if len(cells) < 10:
                 continue
 
-            # struktura dynamiczna:
+            # struktura:
             # 0 = indent
             # 1 = od
             # 2 = do
             # 3 = liczba godzin
-            # 4 = grupa
+            # 4 = grupa (pełna nazwa)
             # 5 = przedmiot
             # 6 = forma
             # 7 = sala
@@ -137,13 +155,42 @@ def parse_plan(html):
                 "uwagi": uwagi,
             })
 
-    if not parsed:
-        return {"error": "Brak danych po przetworzeniu. Spróbuj ponownie."}
-
-    return parsed
+    return parsed if parsed else None
 
 
+# -----------------------------
+#   Główna logika z cache
+# -----------------------------
 @app.get("/plan")
 def get_plan():
+    now = time.time()
+
+    # 1. Jeśli cache jest świeży → zwróć cache
+    if CACHE["data"] and now - CACHE["timestamp"] < CACHE["ttl"]:
+        return {
+            "timestamp": CACHE["timestamp"],
+            "data": CACHE["data"]
+        }
+
+    # 2. Pobierz nowe dane
     html = fetch_html()
-    return parse_plan(html)
+    parsed = parse_plan(html)
+
+    # 3. Jeśli nowe dane są OK → zapisz do cache
+    if parsed:
+        CACHE["data"] = parsed
+        CACHE["timestamp"] = now
+        return {
+            "timestamp": CACHE["timestamp"],
+            "data": CACHE["data"]
+        }
+
+    # 4. Jeśli nowe dane są puste → zwróć cache (fallback)
+    if CACHE["data"]:
+        return {
+            "timestamp": CACHE["timestamp"],
+            "data": CACHE["data"]
+        }
+
+    # 5. Jeśli nie ma nic → zwróć błąd
+    return {"error": "Brak danych z DSW. Spróbuj ponownie."}
