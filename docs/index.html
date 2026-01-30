@@ -230,9 +230,89 @@
       color: #374151;
       opacity: 0.85;
     }
+ 
+/* MOBILE MODE */
+@media (max-width: 768px) {
+
+  body {
+    flex-direction: column;
+  }
+
+  /* Hamburger button */
+  #mobileMenuBtn {
+    display: block;
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 9999;
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 18px;
+    cursor: pointer;
+  }
+
+  /* Sidebar becomes overlay */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -280px;
+    width: 260px;
+    height: 100vh;
+    background: #e5e7eb;
+    transition: left 0.3s ease;
+    z-index: 9998;
+    overflow-y: auto;
+  }
+
+  .sidebar.open {
+    left: 0;
+  }
+
+  /* Main content gets padding so it doesn't hide under menu button */
+  .main {
+    margin-top: 60px;
+    padding: 12px;
+  }
+
+  /* Cards: full width, bigger spacing */
+  #cardsContainer {
+    gap: 16px;
+  }
+
+  .card {
+    padding: 14px;
+  }
+
+  /* Table: horizontal scroll */
+  #tableContainer {
+    overflow-x: auto;
+  }
+
+  table {
+    min-width: 900px;
+  }
+
+  /* Buttons bigger for touch */
+  .sidebar button,
+  .sidebar select {
+    padding: 10px 12px;
+    font-size: 16px;
+  }
+
+  /* Status box moves up */
+  #statusBox {
+    bottom: 70px;
+    right: 10px;
+  }
+}
+
   </style>
 </head>
 <body>
+  <button id="mobileMenuBtn" style="display:none;">☰</button>
   <aside class="sidebar">
     <h1>EduFlow</h1>
 
@@ -748,7 +828,36 @@ document.getElementById("reloadBtn").addEventListener("click", async () => {
 });
 
 init();
+  // MOBILE MENU
+const mobileBtn = document.getElementById("mobileMenuBtn");
+const sidebar = document.querySelector(".sidebar");
+
+function updateMobileMode() {
+  if (window.innerWidth <= 768) {
+    mobileBtn.style.display = "block";
+  } else {
+    mobileBtn.style.display = "none";
+    sidebar.classList.remove("open");
+  }
+}
+
+mobileBtn.addEventListener("click", () => {
+  sidebar.classList.toggle("open");
+});
+
+// Close sidebar when clicking outside
+document.addEventListener("click", (e) => {
+  if (window.innerWidth > 768) return;
+  if (!sidebar.contains(e.target) && e.target !== mobileBtn) {
+    sidebar.classList.remove("open");
+  }
+});
+
+window.addEventListener("resize", updateMobileMode);
+updateMobileMode();
+
 </script>
 
 </body>
 </html>
+
