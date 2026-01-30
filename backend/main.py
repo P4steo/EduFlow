@@ -13,41 +13,20 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://p4steo.github.io",
-        "https://p4steo.github.io/EduFlow",
-        "https://eduflow.com",
-        "https://www.eduflow.com"
-    ],
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-
 def fetch_html():
     s = requests.Session()
-
-    s.headers.update({
-        "User-Agent": "Mozilla/5.0",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    })
+    s.headers.update({"User-Agent": "Mozilla/5.0"})
     s.get(URL_PAGE)
-
-    s.headers.update({
-        "X-Requested-With": "XMLHttpRequest",
-        "Accept": "text/html, */*; q=0.01",
-        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-        "Origin": BASE,
-        "Referer": URL_PAGE,
-    })
 
     payload = {
         "DXCallbackName": "gridViewPlanyTokow",
         "__DXCallbackArgument": "c0:KV|2;[];GB|35;14|CUSTOMCALLBACK15|[object Object];",
-        "gridViewPlanyTokow": (
-            '{"customOperationState":"","keys":[],"callbackState":"","groupLevelState":{},'
-            '"selection":"","toolbar":null}'
-        ),
+        "gridViewPlanyTokow": '{"customOperationState":"","keys":[],"callbackState":"","groupLevelState":{},"selection":"","toolbar":null}',
         "gridViewPlanyTokow$custwindowState": '{"windowsState":"0:0:-1:0:0:0:-10000:-10000:1:0:0:0"}',
         "DXMVCEditorsValues": "{}",
         "parametry": "2025-9-6;2026-2-8;3;1199",
@@ -58,15 +37,9 @@ def fetch_html():
     r.raise_for_status()
     return r.text
 
-
 def extract_group_code(godziny: str) -> str:
-    # np. "MK: PGiA 2st 1sem Ćw2N" → "Ćw2N"
     parts = godziny.split()
-    if not parts:
-        return ""
-    last = parts[-1]
-    return last  # Ćw1N / Ćw2N / WykN itd.
-
+    return parts[-1] if parts else ""
 
 def parse_plan(html):
     soup = BeautifulSoup(html, "html.parser")
@@ -89,23 +62,16 @@ def parse_plan(html):
             "data": cols[1],
             "od": cols[2],
             "do": cols[3],
-            "godziny": godziny,
-            "group_code": group_code,  # Ćw1N / Ćw2N / WykN
-            "grupa": cols[5],
-            "zajecia": cols[6],
-            "forma": cols[7],
-            "sala": cols[8],
-            "prowadzacy": cols[9],
-            "uwagi": cols[10],
+            "group_code": group_code,      # Ćw1N / Ćw2N / WykN
+            "przedmiot": cols[5],          # nazwa przedmiotu
+            "typ": cols[6],                # Cw / Wyk
+            "sala": cols[7],               # sala
+            "prowadzacy": cols[8],         # prowadzący
+            "zaliczenie": cols[9],         # egzamin / zaliczenie
+            "uwagi": cols[10],             # uwagi
         })
 
     return parsed
-
-
-@app.get("/")
-def root():
-    return {"status": "ok", "message": "EduFlow backend running"}
-
 
 @app.get("/plan")
 def get_plan():
