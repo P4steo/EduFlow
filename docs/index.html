@@ -110,6 +110,17 @@
       color: var(--text-muted);
     }
 
+    #reloadBtn {
+      margin-left: 10px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      background: var(--accent-soft);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      font-size: 13px;
+      cursor: pointer;
+    }
+
     #noDataMessage {
       margin-bottom: 12px;
       font-size: 13px;
@@ -207,10 +218,21 @@
       font-size: 12px;
       margin-top: 2px;
     }
+
+    #statusBox {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      background: #e5e7eb;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      color: #374151;
+      opacity: 0.85;
+    }
   </style>
 </head>
 <body>
-
   <aside class="sidebar">
     <h1>EduFlow</h1>
 
@@ -227,6 +249,7 @@
       <button class="date-mode-btn" data-mode="next">Następny zjazd</button>
       <button class="date-mode-btn" data-mode="all">Cały semestr</button>
       <button class="date-mode-btn" data-mode="custom">Własny zakres</button>
+
       <div id="customDates" style="margin-top:8px; display:none;">
         <input type="date" id="startDate" style="margin-bottom:4px; width:100%;">
         <input type="date" id="endDate" style="width:100%;">
@@ -240,6 +263,10 @@
         <button id="viewCards" class="active">Karty</button>
         <button id="viewTable">Tabela</button>
       </div>
+    </section>
+
+    <section>
+      <button id="reloadBtn">Załaduj ponownie dane</button>
     </section>
   </aside>
 
@@ -275,6 +302,8 @@
     </div>
   </main>
 
+  <div id="statusBox">Ładowanie…</div>
+
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <script src="https://cdn.datatables.net/2.1.8/js/dataTables.min.js"></script>
 
@@ -287,15 +316,20 @@
     let currentView = "cards";
     let currentDateMode = "nearest";
     let currentGroup = "all";
+    let lastTimestamp = null;
 
+    // -----------------------------
+    // Retry + pobieranie danych
+    // -----------------------------
     async function fetchPlanWithRetry(retries = 5, delay = 1500) {
       for (let i = 0; i < retries; i++) {
         try {
           const res = await fetch(API_URL);
-          const data = await res.json();
+          const json = await res.json();
 
-          if (data && !data.error && Array.isArray(data) && data.length > 0) {
-            return data;
+          if (json && json.data && Array.isArray(json.data) && json.data.length > 0) {
+            lastTimestamp = json.timestamp;
+            return json.data;
           }
         } catch (e) {}
 
@@ -304,109 +338,89 @@
       return null;
     }
 
-    function parseDate(d) {
-      return new Date(d);
-    }
-
-    function isWeekend(date) {
-      const day = date.getDay();
-      return day === 0 || day === 6;
-    }
-
-    function groupByDate(data) {
-      const map = {};
-      data.forEach(item => {
-        if (!map[item.data]) map[item.data] = [];
-        map[item.data].push(item);
-      });
-      return Object.entries(map).sort((a, b) => new Date(a[0]) - new Date(b[0]));
-    }
-
-    function findWeekendBlocks(data) {
-      const byDate = groupByDate(data);
-      const weekends = [];
-
-      for (let i = 0; i < byDate.length; i++) {
-        const [dateStr] = byDate[i];
-        const date = parseDate(dateStr);
-        if (!isWeekend(date)) continue;
-
-        const block = { start: dateStr, end: dateStr, dates: [dateStr] };
-
-        if (i + 1 < byDate.length) {
-          const [nextDateStr] = byDate[i + 1];
-          const nextDate = parseDate(nextDateStr);
-          if ((nextDate - date) / 86400000 === 1 && isWeekend(nextDate)) {
-            block.end = nextDateStr;
-            block.dates.push(nextDateStr);
-          }
-        }
-
-        weekends.push(block);
+    // -----------------------------
+    // Weekend helpers
+    // -----------------------------
+    function nextWeekendDate(fromDate = new Date()) {
+      const d = new Date(fromDate);
+      while (true) {
+        const day = d.getDay();
+        if (day === 6 || day === 0) return d;
+        d.setDate(d.getDate() + 1);
       }
-
-      return weekends;
     }
 
+    function findNearestWeekendWithData() {
+      let d = new Date();
+
+      for (let i = 0; i < 60; i++) {
+        const weekend = nextWeekendDate(d);
+        const dateStr = weekend.toISOString().split("T")[0].replace(/-/g, ".");
+
+        const hasData = fullData.some(item => item.data.includes(dateStr));
+        if (hasData) return dateStr;
+
+        weekend.setDate(weekend.getDate() + 1);
+        d = weekend;
+      }
+      return null;
+    }
+
+    function findNextWeekendWithData(afterDateStr) {
+      const [y, m, d] = afterDateStr.split(".").map(Number);
+      let date = new Date(y, m - 1, d + 1);
+
+      for (let i = 0; i < 60; i++) {
+        const weekend = nextWeekendDate(date);
+        const dateStr = weekend.toISOString().split("T")[0].replace(/-/g, ".");
+
+        const hasData = fullData.some(item => item.data.includes(dateStr));
+        if (hasData) return dateStr;
+
+        weekend.setDate(weekend.getDate() + 1);
+        date = weekend;
+      }
+      return null;
+    }
+
+    // -----------------------------
+    // Filtrowanie dat
+    // -----------------------------
     function filterByDateMode() {
       if (currentDateMode === "all") {
         document.getElementById("currentRangeLabel").textContent = "Cały semestr";
         return fullData.slice();
       }
 
-      const weekends = findWeekendBlocks(fullData);
-      if (weekends.length === 0) {
-        document.getElementById("currentRangeLabel").textContent = "Brak zjazdów";
-        return fullData.slice();
+      const nearest = findNearestWeekendWithData();
+      if (!nearest) {
+        document.getElementById("currentRangeLabel").textContent = "Brak zjazdów w danych";
+        return [];
       }
 
-      const today = new Date();
-      let chosen = weekends[0];
-
       if (currentDateMode === "nearest") {
-        let best = null;
-        let bestDiff = Infinity;
-        weekends.forEach(block => {
-          const d = parseDate(block.start);
-          const diff = (d - today) / 86400000;
-          if (diff >= 0 && diff < bestDiff) {
-            bestDiff = diff;
-            best = block;
-          }
-        });
-        chosen = best || weekends[0];
+        document.getElementById("currentRangeLabel").textContent = `Najbliższy zjazd: ${nearest}`;
+        return fullData.filter(item => item.data.includes(nearest));
       }
 
       if (currentDateMode === "next") {
-        let best = null;
-        let bestDiff = Infinity;
-        weekends.forEach(block => {
-          const d = parseDate(block.start);
-          const diff = (d - today) / 86400000;
-          if (diff > 0 && diff < bestDiff) {
-            bestDiff = diff;
-            best = block;
-          }
-        });
-        chosen = best || weekends[weekends.length - 1];
+        const next = findNextWeekendWithData(nearest);
+        if (!next) {
+          document.getElementById("currentRangeLabel").textContent = "Brak kolejnego zjazdu";
+          return [];
+        }
+        document.getElementById("currentRangeLabel").textContent = `Następny zjazd: ${next}`;
+        return fullData.filter(item => item.data.includes(next));
       }
 
-      const setDates = new Set(chosen.dates);
-      const result = fullData.filter(item => setDates.has(item.data));
-
-      document.getElementById("currentRangeLabel").textContent =
-        chosen.start === chosen.end
-          ? `Zjazd: ${chosen.start}`
-          : `Zjazd: ${chosen.start} – ${chosen.end}`;
-
-      return result;
+      return fullData.slice();
     }
 
     function filterByCustomDates(start, end) {
       const s = new Date(start);
       const e = new Date(end);
       const result = fullData.filter(item => {
-        const d = parseDate(item.data);
+        const d = new Date(item.data.replace(/\./g, "-"));
         return d >= s && d <= e;
       });
       document.getElementById("currentRangeLabel").textContent = `Zakres: ${start} – ${end}`;
@@ -420,6 +434,9 @@
       );
     }
 
+    // -----------------------------
+    // Renderowanie
+    // -----------------------------
     function updateNoDataMessage() {
       const msg = document.getElementById("noDataMessage");
       if (!filteredData || filteredData.length === 0) {
@@ -431,6 +448,7 @@
 
     function applyAllFilters() {
       let base;
+
       if (currentDateMode === "custom") {
         const s = document.getElementById("startDate").value;
         const e = document.getElementById("endDate").value;
@@ -458,6 +476,15 @@
         document.getElementById("tableContainer").style.display = "block";
         renderTable();
       }
+    }
+
+    function groupByDate(data) {
+      const map = {};
+      data.forEach(item => {
+        if (!map[item.data]) map[item.data] = [];
+        map[item.data].push(item);
+      });
+      return Object.entries(map).sort((a, b) => new Date(a[0]) - new Date(b[0]));
     }
 
     function renderCards() {
@@ -542,7 +569,7 @@
     function renderTable() {
       const rows = filteredData
         .sort((a, b) => {
-          const d = parseDate(a.data) - parseDate(b.data);
+          const d = new Date(a.data.replace(/\./g, "-")) - new Date(b.data.replace(/\./g, "-"));
           if (d !== 0) return d;
           return a.od.localeCompare(b.od);
         })
@@ -597,23 +624,29 @@
       }
     }
 
+    // -----------------------------
+    // INIT
+    // -----------------------------
     async function init() {
-      const msg = document.getElementById("noDataMessage");
-      msg.textContent = "Ładowanie danych… proszę czekać.";
-      msg.style.display = "block";
+      document.getElementById("noDataMessage").textContent = "Ładowanie danych…";
+      document.getElementById("noDataMessage").style.display = "block";
 
       const data = await fetchPlanWithRetry();
 
       if (!data) {
-        msg.textContent = "Brak danych z serwera. Spróbuj ponownie za chwilę.";
-        fullData = [];
-        filteredData = [];
-        render();
+        document.getElementById("noDataMessage").textContent =
+          "Brak danych z serwera. Spróbuj ponownie.";
         return;
       }
 
       fullData = data;
 
+      // status
+      document.getElementById("statusBox").textContent =
+        "Dane zaktualizowano: " +
+        new Date(lastTimestamp * 1000).toLocaleString("pl-PL");
+
+      // grupy
       const groups = [...new Set(
         fullData
           .map(i => i.group_code)
@@ -628,11 +661,14 @@
         select.appendChild(opt);
       });
 
-      msg.style.display = "none";
+      document.getElementById("noDataMessage").style.display = "none";
 
       applyAllFilters();
     }
 
+    // -----------------------------
+    // Eventy
+    // -----------------------------
     document.getElementById("groupSelect").addEventListener("change", e => {
       currentGroup = e.target.value;
       applyAllFilters();
@@ -666,6 +702,31 @@
       document.getElementById("viewTable").classList.add("active");
       document.getElementById("viewCards").classList.remove("active");
       render();
+    });
+
+    // -----------------------------
+    // Przycisk: Załaduj ponownie dane
+    // -----------------------------
+    document.getElementById("reloadBtn").addEventListener("click", async () => {
+      document.getElementById("statusBox").textContent = "Odświeżanie…";
+      document.getElementById("noDataMessage").style.display = "block";
+      document.getElementById("noDataMessage").textContent = "Ładowanie danych…";
+
+      const data = await fetchPlanWithRetry();
+
+      if (!data) {
+        document.getElementById("noDataMessage").textContent =
+          "Brak danych z serwera. Spróbuj ponownie.";
+        return;
+      }
+
+      fullData = data;
+
+      document.getElementById("statusBox").textContent =
+        "Dane zaktualizowano: " +
+        new Date(lastTimestamp * 1000).toLocaleString("pl-PL");
+
+      applyAllFilters();
     });
 
     init();
