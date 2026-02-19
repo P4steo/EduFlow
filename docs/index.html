@@ -1,305 +1,518 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Plan zjazdów DSW</title>
+  <meta charset="UTF-8" />
+  <title>Plan zjazdów DSW</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<style>
-/* ---------------------------------------------------
-   1A — ZMIENNE KOLORY (ciemny motyw domyślny)
---------------------------------------------------- */
-:root {
-  --bg: #0f172a;
-  --bg-soft: #111827;
-  --bg-softer: #020617;
-  --accent: #38bdf8;
-  --accent-soft: rgba(56, 189, 248, 0.15);
-  --text: #e5e7eb;
-  --text-soft: #9ca3af;
-  --border: #1f2937;
-  --danger: #f97373;
-}
+  <!-- DataTables + jQuery -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/2.1.8/css/dataTables.dataTables.min.css">
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.datatables.net/2.1.8/js/dataTables.min.js"></script>
 
-/* ---------------------------------------------------
-   1B — JASNY MOTYW (Apple pastel)
---------------------------------------------------- */
-html.light {
-  --bg: #f7f9fc;
-  --bg-soft: #ffffff;
-  --bg-softer: #eef2f7;
-  --accent: #0ea5e9;
-  --accent-soft: rgba(14,165,233,0.15);
-  --text: #1e293b;
-  --text-soft: #475569;
-  --border: #cbd5e1;
-  --danger: #ef4444;
-}
+  <style>
+    :root {
+      --bg: #0f172a;
+      --bg-soft: #111827;
+      --bg-softer: #020617;
+      --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.15);
+      --text: #e5e7eb;
+      --text-soft: #9ca3af;
+      --border: #1f2937;
+      --danger: #f97373;
+    }
 
-/* ---------------------------------------------------
-   1C — GLOBALNY LAYOUT
---------------------------------------------------- */
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font-family: system-ui, sans-serif;
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-}
+    * {
+      box-sizing: border-box;
+    }
 
-.app {
-  display: flex;
-  flex: 1;
-  overflow: hidden;
-}
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #1e293b 0, #020617 55%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
 
-/* ---------------------------------------------------
-   1D — SIDEBAR (desktop)
---------------------------------------------------- */
-.sidebar {
-  width: 260px;
-  background: var(--bg-soft);
-  border-right: 1px solid var(--border);
-  padding: 16px;
-  overflow-y: auto;
-}
+    .app {
+      display: flex;
+      min-height: 100vh;
+    }
 
-.sidebar h2 {
-  margin-top: 0;
-  font-size: 18px;
-  font-weight: 600;
-}
+    .sidebar {
+      width: 280px;
+      background: linear-gradient(180deg, #020617 0%, #020617 40%, #020617 100%);
+      border-right: 1px solid var(--border);
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: relative;
+      z-index: 10;
+    }
 
-.sidebar h3 {
-  margin-top: 20px;
-  font-size: 15px;
-  font-weight: 600;
-}
+    .sidebar-header {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
 
-.sidebar select,
-.sidebar button,
-.sidebar input[type="date"] {
-  width: 100%;
-  margin-top: 6px;
-  margin-bottom: 10px;
-  padding: 8px;
-  background: var(--bg-softer);
-  border: 1px solid var(--border);
-  color: var(--text);
-  border-radius: 6px;
-}
+    .app-title {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
 
-.sidebar button {
-  cursor: pointer;
-  background: var(--accent-soft);
-  border: 1px solid var(--accent);
-}
+    /* KROPKA — STAN POCZĄTKOWY */
+    .app-title span.logo-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 30%, #e0f2fe, #38bdf8);
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.8);
+    }
 
-.sidebar button.active {
-  background: var(--accent);
-  color: #fff;
-}
+    .app-subtitle {
+      font-size: 12px;
+      color: var(--text-soft);
+    }
 
-/* ---------------------------------------------------
-   1E — TOPBAR (mobile + desktop)
---------------------------------------------------- */
-#topbar {
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 12px;
-  background: var(--bg);
-  border-bottom: 1px solid var(--border);
-}
+    /* ANIMACJA ODD BREATHING */
+    @keyframes pulse-breath {
+      0% { opacity: 0.4; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.15); }
+      100% { opacity: 0.4; transform: scale(1); }
+    }
 
-#topbar .topbar-title {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-weight: 600;
-  font-size: 15px;
-}
+    /* STAN ŁADOWANIA — NIEBIESKA PULSUJĄCA */
+    .logo-dot.loading {
+      background: #38bdf8 !important;
+      animation: pulse-breath 1.2s ease-in-out infinite;
+      box-shadow: 0 0 10px rgba(56,189,248,0.6);
+    }
 
-#mobileMenuBtn {
-  background: none;
-  border: none;
-  color: var(--text);
-  font-size: 20px;
-  cursor: pointer;
-}
+    /* STAN ZAŁADOWANO — ZIELONA */
+    .logo-dot.loaded {
+      background: #4ade80 !important;
+      animation: none;
+      box-shadow: 0 0 10px rgba(74,222,128,0.6);
+    }
 
-/* ---------------------------------------------------
-   1F — PRZYCISK MOTYWU 🌓
---------------------------------------------------- */
-.theme-btn {
-  background: none;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-  transition: transform .25s ease, opacity .25s ease;
-}
-.theme-btn.anim {
-  transform: scale(1.25);
-  opacity: 0.6;
-}
+    /* STAN BŁĘDU — CZERWONA */
+    .logo-dot.error {
+      background: #f87171 !important;
+      animation: none;
+      box-shadow: 0 0 10px rgba(248,113,113,0.6);
+    }
 
-/* ---------------------------------------------------
-   1G — MODAL FILTRÓW (mobile)
---------------------------------------------------- */
-#filterModal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.55);
-  backdrop-filter: blur(6px);
-  display: none;
-  justify-content: center;
-  align-items: flex-start;
-  padding-top: 40px;
-  z-index: 100;
-}
+    /* STAN SPOCZYNKOWY — NIEBIESKA BEZ ANIMACJI */
+    .logo-dot.idle {
+      background: radial-gradient(circle at 30% 30%, #e0f2fe, #38bdf8);
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.8);
+    }
 
-#filterModalContent {
-  width: 92%;
-  max-width: 420px;
-  background: var(--bg-soft);
-  border-radius: 14px;
-  padding: 16px;
-  border: 1px solid var(--border);
-}
+    /* RESZTA TWOJEGO CSS — BEZ ZMIAN */
+    .filter-section {
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: 10px;
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      padding: 10px 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
 
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 22px;
-  float: right;
-  cursor: pointer;
-  color: var(--text);
-}
+    .filter-section h3 {
+      margin: 0;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-soft);
+    }
 
-/* ---------------------------------------------------
-   1H — UKRYCIE SIDEBARU NA MOBILE
---------------------------------------------------- */
-@media (max-width: 768px) {
-  .sidebar {
-    display: none !important;
-  }
-}
-</style>
+    select,
+    button,
+    input[type="date"] {
+      width: 100%;
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #020617;
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+    }
+
+    select:focus,
+    input[type="date"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.4);
+    }
+
+    .date-modes {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .date-mode-btn {
+      flex: 1;
+      padding: 6px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #020617;
+      color: var(--text-soft);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .date-mode-btn.active {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .view-toggle {
+      display: flex;
+      gap: 6px;
+    }
+
+    .view-toggle button {
+      flex: 1;
+      padding: 6px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #020617;
+      color: var(--text-soft);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+    }
+
+    .view-toggle button.active {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .status-box {
+      margin-top: auto;
+      font-size: 11px;
+      color: var(--text-soft);
+      padding-top: 8px;
+      border-top: 1px dashed var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .status-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-pill {
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid var(--border);
+      font-size: 10px;
+      color: var(--text-soft);
+    }
+
+    .reload-btn {
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #020617;
+      color: var(--text-soft);
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .reload-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .main {
+      flex: 1;
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .range-label {
+      font-size: 13px;
+      color: var(--text-soft);
+    }
+
+    .no-data {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px dashed var(--border);
+      background: rgba(15, 23, 42, 0.7);
+      font-size: 13px;
+      color: var(--text-soft);
+      display: none;
+    }
+
+    .cards-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .day-block {
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: 12px;
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .day-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-soft);
+      margin-bottom: 4px;
+    }
+
+    .card {
+      background: #020617;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      padding: 8px 9px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      position: relative;
+    }
+
+    .card.cancelled {
+      opacity: 0.5;
+      border-color: var(--danger);
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-soft);
+    }
+
+    .time {
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .card-main {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .card-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-soft);
+    }
+
+    .card-meta span {
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid var(--border);
+    }
+
+    .card-uwagi {
+      font-size: 11px;
+      color: var(--text-soft);
+      margin-top: 2px;
+    }
+
+    /* Kolory grup – pastelowe */
+    .card.group-1 { border-left: 4px solid #ff6b6b; }
+    .card.group-2 { border-left: 4px solid #4dabf7; }
+    .card.group-3 { border-left: 4px solid #51cf66; }
+    .card.group-4 { border-left: 4px solid #845ef7; }
+    .card.group-5 { border-left: 4px solid #ffa94d; }
+    .card.group-6 { border-left: 4px solid #20c997; }
+    .card.group-7 { border-left: 4px solid #e64980; }
+
+    .table-container {
+      display: none;
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: 12px;
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      padding: 10px;
+    }
+
+    table.dataTable {
+      color: var(--text);
+      font-size: 12px;
+    }
+
+    table.dataTable thead th {
+      background: #020617;
+      border-bottom: 1px solid var(--border);
+    }
+
+    table.dataTable tbody tr.cancelled {
+      opacity: 0.5;
+      color: var(--danger);
+    }
+
+    #customDates {
+      display: none;
+      gap: 6px;
+    }
+
+    #customDates input {
+      font-size: 12px;
+    }
+
+    #mobileMenuBtn {
+      display: none;
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      z-index: 20;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.95);
+      color: var(--text-soft);
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 768px) {
+      .app {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        position: fixed;
+        top: 0;
+        left: -320px;
+        height: 100vh;
+        width: 260px;
+        transition: left 0.2s ease-out;
+      }
+
+      .sidebar.open {
+        left: 0;
+      }
+
+      .main {
+        padding-top: 44px;
+      }
+
+      #mobileMenuBtn {
+        display: block;
+      }
+    }
+  </style>
 </head>
 <body>
 
-<!-- TOPBAR -->
-<div id="topbar">
-  <button id="mobileMenuBtn">☰</button>
+<button id="mobileMenuBtn">Filtry</button>
 
-  <div class="topbar-title">
-    <span class="logo-dot idle"></span>
-    <span>Plan zjazdów DSW</span>
-  </div>
-
-  <button id="themeToggle" class="theme-btn">🌓</button>
-</div>
-
-<!-- MODAL FILTRÓW (mobile) -->
-<div id="filterModal">
-  <div id="filterModalContent">
-    <button id="closeFilterModal" class="close-btn">✕</button>
-    <h2>Filtry</h2>
-    <div id="modalSidebar"></div>
-  </div>
-</div>
-
-<!-- APLIKACJA -->
 <div class="app">
-
-  <!-- SIDEBAR (desktop) -->
-  <div class="sidebar">
-    <h2>Filtry</h2>
-
-    <label>Specjalność:</label>
-    <select id="specSelect">
-      <option value="1337">Informatyka</option>
-      <option value="1338">Zarządzanie</option>
-    </select>
-
-    <label>Grupa:</label>
-    <select id="groupSelect"></select>
-
-    <h3>Zakres dat</h3>
-    <button class="date-mode-btn active" data-mode="nearest">Najbliższy zjazd</button>
-    <button class="date-mode-btn" data-mode="next">Następny zjazd</button>
-    <button class="date-mode-btn" data-mode="all">Cały semestr</button>
-    <button class="date-mode-btn" data-mode="custom">Własny zakres</button>
-
-    <div id="customDates" style="display:none;">
-      <input type="date" id="startDate">
-      <input type="date" id="endDate">
-      <button id="applyCustomDates">Zastosuj</button>
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="app-title">
+        <span class="logo-dot idle"></span>
+        <span>Plan zjazdów DSW</span>
+      </div>
+      <div class="app-subtitle">Game Design • Game Art • Animacja 3D</div>
     </div>
 
-    <h3>Widok</h3>
-    <button id="viewCards" class="active">Karty</button>
-    <button id="viewTable">Tabela</button>
-
-    <h3>Akcje</h3>
-    <button id="reloadBtn">Odśwież</button>
-
-    <div id="statusBox" style="margin-top:10px; font-size:12px; color:var(--text-soft);">
-      Oczekiwanie na dane…
-    </div>
-  </div>
-
-  <!-- MAIN -->
-  <div class="main" style="flex:1; overflow-y:auto; padding:16px;">
-    <div id="currentRangeLabel" style="margin-bottom:12px; font-size:14px; color:var(--text-soft);"></div>
-
-    <div id="noDataMessage" style="display:none; padding:20px; text-align:center; color:var(--text-soft);">
-      Brak danych…
+    <div class="filter-section">
+      <h3>Specjalizacja</h3>
+      <select id="specSelect">
+        <option value="1337">Animacja 3D</option>
+        <option value="1336">Game Art i Concept Design</option>
+        <option value="1335">Game Design</option>
+      </select>
     </div>
 
-    <div id="cardsContainer" style="display:flex; flex-direction:column; gap:12px;"></div>
-
-    <div id="tableContainer" style="display:none;">
-      <table id="planTable" class="display" style="width:100%;"></table>
+    <div class="filter-section">
+      <h3>Grupa</h3>
+      <select id="groupSelect">
+        <option value="all">Wszystkie</option>
+      </select>
+      <small style="font-size:11px;color:var(--text-soft);">
+        „Moja grupa” = wybrana grupa + wykłady wspólne
+      </small>
     </div>
-  </div>
 
+    <div class="filter-section">
+      <h3>Zakres dat</h3>
+      <div class="date-modes">
+        <button class="date-mode-btn active" data-mode="nearest">Najbliższy zjazd</button>
+        <button class="date-mode-btn" data-mode="next">Następny</button>
+        <button class="date-mode-btn" data-mode="all">Cały semestr</button>
+        <button class="date-mode-btn" data-mode="custom">Własny</button>
+      </div>
+      <div id="customDates">
+        <input type="date" id="startDate">
+        <input type="date" id="endDate">
+        <button id="applyCustomDates">OK</button>
+      </div>
+    </div>
+
+    <div class="filter-section">
+      <h3>Widok</h3>
+      <div class="view-toggle">
+        <button id="viewCards" class="active">Karty</button>
+        <button id="viewTable">Tabela</button>
+      </div>
+    </div>
+
+    <div class="status-box">
+      <div class="status-line">
+        <span class="status-pill" id="statusBox">Ładowanie…</span>
+        <button class="reload-btn" id="reloadBtn">Odśwież</button>
+      </div>
+      <div style="font-size:11px;color:var(--text-soft);">
+        <span id="currentRangeLabel">Najbliższy zjazd</span>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div id="noDataMessage" class="no-data">Ładowanie danych…</div>
+
+    <div id="cardsContainer" class="cards-container"></div>
+
+    <div id="tableContainer" class="table-container">
+      <table id="planTable" style="width:100%;"></table>
+    </div>
+  </main>
 </div>
 <script>
-/* ---------------------------------------------------
-   3A — KROPKA STATUSU
---------------------------------------------------- */
-function setDotLoading() {
-  const dot = document.querySelector(".logo-dot");
-  dot.classList.remove("loaded", "error", "idle");
-  dot.classList.add("loading");
-}
-
-function setDotLoaded() {
-  const dot = document.querySelector(".logo-dot");
-  dot.classList.remove("loading", "error", "idle");
-  dot.classList.add("loaded");
-  setTimeout(() => {
-    dot.classList.remove("loaded");
-    dot.classList.add("idle");
-  }, 3000);
-}
-
-function setDotError() {
-  const dot = document.querySelector(".logo-dot");
-  dot.classList.remove("loading", "loaded", "idle");
-  dot.classList.add("error");
-}
-
-/* ---------------------------------------------------
-   3A — FETCH + RETRY
---------------------------------------------------- */
 const API_URL = "https://eduflow-qivy.onrender.com/plan";
 
 let fullData = [];
@@ -313,23 +526,48 @@ let currentGroup = "all";
 
 let lastTimestamp = null;
 
+/* KROPKA — FUNKCJE STANÓW */
+function setDotLoading() {
+  const dot = document.querySelector(".logo-dot");
+  dot.classList.remove("loaded", "error", "idle");
+  dot.classList.add("loading");
+}
+
+function setDotLoaded() {
+  const dot = document.querySelector(".logo-dot");
+  dot.classList.remove("loading", "error", "idle");
+  dot.classList.add("loaded");
+
+  setTimeout(() => {
+    dot.classList.remove("loaded");
+    dot.classList.add("idle");
+  }, 3000);
+}
+
+function setDotError() {
+  const dot = document.querySelector(".logo-dot");
+  dot.classList.remove("loading", "loaded", "idle");
+  dot.classList.add("error");
+}
+
+/* FETCH + RETRY */
 async function fetchPlanWithRetry(retries = 5, delay = 1500) {
   for (let i = 0; i < retries; i++) {
     try {
       const res = await fetch(`${API_URL}?tok=${currentTok}`);
       const json = await res.json();
+
       if (json && json.data && Array.isArray(json.data) && json.data.length > 0) {
         lastTimestamp = json.timestamp;
         return json.data;
       }
     } catch (e) {}
-    await new Promise(r => setTimeout(r, delay));
+
+    await new Promise(resolve => setTimeout(resolve, delay));
   }
   return null;
 }
-<!-- ---------------------------------------------------
-     3B — WEEKEND HELPERS
---------------------------------------------------- -->
+/* WEEKEND HELPERS */
 function nextWeekendDate(fromDate = new Date()) {
   const d = new Date(fromDate);
   while (true) {
@@ -380,9 +618,7 @@ function findNextWeekendRange(currentRange) {
   return { sat: satStr, sun: sunStr };
 }
 
-/* ---------------------------------------------------
-   3B — FILTRY
---------------------------------------------------- */
+/* FILTERING */
 function filterByDateMode() {
   if (currentDateMode === "all") {
     document.getElementById("currentRangeLabel").textContent = "Cały semestr";
@@ -447,6 +683,7 @@ function applyGroupFilter(base) {
   });
 }
 
+/* GROUP FILTER UI */
 function updateGroupFilter() {
   const select = document.getElementById("groupSelect");
   const groups = new Set();
@@ -462,10 +699,8 @@ function updateGroupFilter() {
     select.innerHTML += `<option value="${g}">Grupa ${g}</option>`;
   });
 }
-<!-- ---------------------------------------------------
-     3C — RENDEROWANIE (karty + tabela)
---------------------------------------------------- -->
 
+/* RENDERING */
 function updateNoDataMessage() {
   const msg = document.getElementById("noDataMessage");
   if (!filteredData || filteredData.length === 0) {
@@ -510,9 +745,6 @@ function render() {
   }
 }
 
-/* ---------------------------------------------------
-   3C — GRUPOWANIE PO DACIE
---------------------------------------------------- */
 function groupByDate(data) {
   const map = {};
   data.forEach(item => {
@@ -522,9 +754,6 @@ function groupByDate(data) {
   return Object.entries(map).sort((a, b) => new Date(a[0]) - new Date(b[0]));
 }
 
-/* ---------------------------------------------------
-   3C — RENDER KART
---------------------------------------------------- */
 function renderCards() {
   const container = document.getElementById("cardsContainer");
   container.innerHTML = "";
@@ -617,9 +846,6 @@ function renderCards() {
   });
 }
 
-/* ---------------------------------------------------
-   3C — RENDER TABELI
---------------------------------------------------- */
 function renderTable() {
   const rows = filteredData
     .sort((a, b) => {
@@ -683,51 +909,35 @@ function renderTable() {
     table.draw();
   }
 }
-<!-- ---------------------------------------------------
-     3D — MOTYW JASNY/CIEMNY + ANIMACJA 🌓
---------------------------------------------------- -->
-function applyInitialTheme() {
-  const saved = localStorage.getItem("theme");
-  if (saved) {
-    document.documentElement.classList.toggle("light", saved === "light");
+/* INIT */
+async function init() {
+  setDotLoading();
+  document.getElementById("noDataMessage").textContent = "Ładowanie danych…";
+  document.getElementById("noDataMessage").style.display = "block";
+
+  const data = await fetchPlanWithRetry();
+
+  if (!data) {
+    document.getElementById("noDataMessage").textContent =
+      "Brak danych z serwera. Spróbuj ponownie.";
+    setDotError();
     return;
   }
-  const prefersLight = window.matchMedia("(prefers-color-scheme: light)").matches;
-  document.documentElement.classList.toggle("light", prefersLight);
+
+  fullData = data;
+
+  document.getElementById("statusBox").textContent =
+    "Dane zaktualizowano: " +
+    new Date(lastTimestamp * 1000).toLocaleString("pl-PL");
+
+  document.getElementById("noDataMessage").style.display = "none";
+
+  updateGroupFilter();
+  applyAllFilters();
+  setDotLoaded();
 }
-applyInitialTheme();
 
-const themeBtn = document.getElementById("themeToggle");
-themeBtn.addEventListener("click", () => {
-  const isLight = document.documentElement.classList.toggle("light");
-  themeBtn.classList.add("anim");
-  setTimeout(() => themeBtn.classList.remove("anim"), 250);
-  localStorage.setItem("theme", isLight ? "light" : "dark");
-});
-
-
-
-/* ---------------------------------------------------
-   3D — MODAL FILTRÓW (mobile)
---------------------------------------------------- */
-const filterModal = document.getElementById("filterModal");
-const modalSidebar = document.getElementById("modalSidebar");
-const closeFilterModal = document.getElementById("closeFilterModal");
-
-document.getElementById("mobileMenuBtn").addEventListener("click", () => {
-  modalSidebar.innerHTML = document.querySelector(".sidebar").innerHTML;
-  filterModal.style.display = "flex";
-});
-
-closeFilterModal.addEventListener("click", () => {
-  filterModal.style.display = "none";
-});
-
-
-
-/* ---------------------------------------------------
-   3D — EVENT LISTENERY
---------------------------------------------------- */
+/* EVENTS */
 document.getElementById("specSelect").addEventListener("change", e => {
   currentTok = e.target.value;
   init();
@@ -794,35 +1004,34 @@ document.getElementById("reloadBtn").addEventListener("click", async () => {
   setDotLoaded();
 });
 
+/* MOBILE MENU */
+const mobileBtn = document.getElementById("mobileMenuBtn");
+const sidebar = document.querySelector(".sidebar");
 
-
-/* ---------------------------------------------------
-   3D — INIT
---------------------------------------------------- */
-async function init() {
-  setDotLoading();
-  document.getElementById("noDataMessage").textContent = "Ładowanie danych…";
-
-  const data = await fetchPlanWithRetry();
-
-  if (!data) {
-    document.getElementById("noDataMessage").textContent =
-      "Brak danych z serwera. Spróbuj ponownie.";
-    setDotError();
-    return;
+function updateMobileMode() {
+  if (window.innerWidth <= 768) {
+    mobileBtn.style.display = "block";
+  } else {
+    mobileBtn.style.display = "none";
+    sidebar.classList.remove("open");
   }
-
-  fullData = data;
-
-  document.getElementById("statusBox").textContent =
-    "Dane zaktualizowano: " +
-    new Date(lastTimestamp * 1000).toLocaleString("pl-PL");
-
-  updateGroupFilter();
-  applyAllFilters();
-  setDotLoaded();
 }
 
+mobileBtn.addEventListener("click", () => {
+  sidebar.classList.toggle("open");
+});
+
+document.addEventListener("click", (e) => {
+  if (window.innerWidth > 768) return;
+  if (!sidebar.contains(e.target) && e.target !== mobileBtn) {
+    sidebar.classList.remove("open");
+  }
+});
+
+window.addEventListener("resize", updateMobileMode);
+updateMobileMode();
+
+/* START */
 init();
 </script>
 </body>
