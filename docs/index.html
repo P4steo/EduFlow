@@ -184,22 +184,6 @@
       font-weight: 600;
     }
 
-    .group-tag {
-      padding: 2px 8px;
-      border-radius: 999px;
-      font-size: 11px;
-      font-weight: 600;
-      color: #111827;
-      background: #e5e7eb;
-    }
-
-    .group-Ćw1N { background: #dbeafe; color: #1d4ed8; }
-    .group-Ćw2N { background: #dcfce7; color: #15803d; }
-    .group-Ćw3N { background: #fef9c3; color: #854d0e; }
-    .group-Ćw4N { background: #fee2e2; color: #b91c1c; }
-    .group-Ćw5N { background: #e0e7ff; color: #4338ca; }
-    .group-WykN { background: #f3e8ff; color: #7e22ce; }
-
     .card-main {
       font-size: 14px;
       font-weight: 500;
@@ -230,99 +214,98 @@
       color: #374151;
       opacity: 0.85;
     }
- 
-/* MOBILE MODE */
-@media (max-width: 768px) {
 
-  body {
-    flex-direction: column;
-  }
+    /* MOBILE MODE */
+    @media (max-width: 768px) {
 
-  /* Hamburger button */
-  #mobileMenuBtn {
-    display: block;
-    position: fixed;
-    top: 10px;
-    left: 10px;
-    z-index: 9999;
-    background: #2563eb;
-    color: white;
-    border: none;
-    padding: 10px 14px;
-    border-radius: 6px;
-    font-size: 18px;
-    cursor: pointer;
-  }
+      body {
+        flex-direction: column;
+      }
 
-  /* Sidebar becomes overlay */
-  .sidebar {
-    position: fixed;
-    top: 0;
-    left: -280px;
-    width: 260px;
-    height: 100vh;
-    background: #e5e7eb;
-    transition: left 0.3s ease;
-    z-index: 9998;
-    overflow-y: auto;
-  }
+      #mobileMenuBtn {
+        display: block;
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        z-index: 9999;
+        background: #2563eb;
+        color: white;
+        border: none;
+        padding: 10px 14px;
+        border-radius: 6px;
+        font-size: 18px;
+      }
 
-  .sidebar.open {
-    left: 0;
-  }
+      .sidebar {
+        position: fixed;
+        top: 0;
+        left: -280px;
+        width: 260px;
+        height: 100vh;
+        background: #e5e7eb;
+        transition: left 0.3s ease;
+        z-index: 9998;
+        overflow-y: auto;
+      }
 
-  /* Main content gets padding so it doesn't hide under menu button */
-  .main {
-    margin-top: 60px;
-    padding: 12px;
-  }
+      .sidebar.open {
+        left: 0;
+      }
 
-  /* Cards: full width, bigger spacing */
-  #cardsContainer {
-    gap: 16px;
-  }
+      .main {
+        margin-top: 60px;
+        padding: 12px;
+      }
 
-  .card {
-    padding: 14px;
-  }
+      #cardsContainer {
+        gap: 16px;
+      }
 
-  /* Table: horizontal scroll */
-  #tableContainer {
-    overflow-x: auto;
-  }
+      .card {
+        padding: 14px;
+      }
 
-  table {
-    min-width: 900px;
-  }
+      #tableContainer {
+        overflow-x: auto;
+      }
 
-  /* Buttons bigger for touch */
-  .sidebar button,
-  .sidebar select {
-    padding: 10px 12px;
-    font-size: 16px;
-  }
+      table {
+        min-width: 900px;
+      }
 
-  /* Status box moves up */
-  #statusBox {
-    bottom: 70px;
-    right: 10px;
-  }
-}
+      .sidebar button,
+      .sidebar select {
+        padding: 10px 12px;
+        font-size: 16px;
+      }
 
+      #statusBox {
+        bottom: 70px;
+        right: 10px;
+      }
+    }
   </style>
 </head>
 <body>
+
+  <!-- HAMBURGER (mobile only) -->
   <button id="mobileMenuBtn" style="display:none;">☰</button>
+
+  <!-- SIDEBAR -->
   <aside class="sidebar">
     <h1>EduFlow</h1>
 
+    <!-- SPECJALIZACJA -->
     <section>
-      <label for="groupSelect">Grupa</label>
-      <select id="groupSelect">
-        <option value="all">Wszystkie</option>
+      <label for="specSelect">Specjalizacja</label>
+      <select id="specSelect">
+        <option value="1337">Animacja 3D</option>
+        <option value="1336">Game Art i Concept Design</option>
+        <option value="1335">Game Design</option>
       </select>
     </section>
 
+    <!-- ZAKRES DAT -->
     <section>
       <label>Zakres dat</label>
       <button class="date-mode-btn active" data-mode="nearest">Najbliższy zjazd</button>
@@ -337,6 +320,7 @@
       </div>
     </section>
 
+    <!-- WIDOK -->
     <section>
       <label>Widok</label>
       <div class="view-toggle">
@@ -345,14 +329,16 @@
       </div>
     </section>
 
+    <!-- RELOAD -->
     <section>
       <button id="reloadBtn">Załaduj ponownie dane</button>
     </section>
   </aside>
 
+  <!-- MAIN CONTENT -->
   <main class="main">
     <div class="header-line">
-      <h2>Plan zajęć – tok 1199</h2>
+      <h2>Plan zajęć – DSW</h2>
       <span id="currentRangeLabel"></span>
     </div>
 
@@ -360,8 +346,10 @@
       Brak danych do wyświetlenia. Wybierz inną datę lub poczekaj – dane są generowane.
     </div>
 
+    <!-- KARTY -->
     <div id="cardsContainer"></div>
 
+    <!-- TABELA -->
     <div id="tableContainer">
       <table id="planTable" class="display" style="width:100%">
         <thead>
@@ -369,7 +357,6 @@
             <th>Data</th>
             <th>Od</th>
             <th>Do</th>
-            <th>Grupa</th>
             <th>Zajęcia</th>
             <th>Forma</th>
             <th>Sala</th>
@@ -382,8 +369,10 @@
     </div>
   </main>
 
+  <!-- STATUS -->
   <div id="statusBox">Ładowanie…</div>
 
+  <!-- JS LIBS -->
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <script src="https://cdn.datatables.net/2.1.8/js/dataTables.min.js"></script>
 <script>
@@ -392,18 +381,20 @@ const API_URL = "https://eduflow-qivy.onrender.com/plan";
 let fullData = [];
 let filteredData = [];
 let table = null;
+
 let currentView = "cards";
 let currentDateMode = "nearest";
-let currentGroup = "all";
+let currentTok = "1337"; // domyślnie Animacja 3D
+
 let lastTimestamp = null;
 
-// -----------------------------
-// Retry + pobieranie danych
-// -----------------------------
+/* ---------------------------------------------
+   FETCH + RETRY
+--------------------------------------------- */
 async function fetchPlanWithRetry(retries = 5, delay = 1500) {
   for (let i = 0; i < retries; i++) {
     try {
-      const res = await fetch(API_URL);
+      const res = await fetch(`${API_URL}?tok=${currentTok}`);
       const json = await res.json();
 
       if (json && json.data && Array.isArray(json.data) && json.data.length > 0) {
@@ -417,9 +408,9 @@ async function fetchPlanWithRetry(retries = 5, delay = 1500) {
   return null;
 }
 
-// -----------------------------
-// Weekend helpers
-// -----------------------------
+/* ---------------------------------------------
+   WEEKEND HELPERS
+--------------------------------------------- */
 function nextWeekendDate(fromDate = new Date()) {
   const d = new Date(fromDate);
   while (true) {
@@ -429,7 +420,6 @@ function nextWeekendDate(fromDate = new Date()) {
   }
 }
 
-// Najbliższy zjazd = sobota + niedziela
 function findNearestWeekendRange() {
   let d = new Date();
 
@@ -459,7 +449,6 @@ function findNearestWeekendRange() {
   return null;
 }
 
-// Następny zjazd = +7 dni
 function findNextWeekendRange(currentRange) {
   const [y, m, d] = currentRange.sat.split(".").map(Number);
   const nextSat = new Date(y, m - 1, d + 7);
@@ -472,9 +461,9 @@ function findNextWeekendRange(currentRange) {
   return { sat: satStr, sun: sunStr };
 }
 
-// -----------------------------
-// Filtrowanie dat
-// -----------------------------
+/* ---------------------------------------------
+   FILTERING
+--------------------------------------------- */
 function filterByDateMode() {
   if (currentDateMode === "all") {
     document.getElementById("currentRangeLabel").textContent = "Cały semestr";
@@ -513,24 +502,19 @@ function filterByDateMode() {
 function filterByCustomDates(start, end) {
   const s = new Date(start);
   const e = new Date(end);
+
   const result = fullData.filter(item => {
     const d = new Date(item.data.replace(/\./g, "-"));
     return d >= s && d <= e;
   });
+
   document.getElementById("currentRangeLabel").textContent = `Zakres: ${start} – ${end}`;
   return result;
 }
 
-function filterByGroup(data) {
-  if (currentGroup === "all") return data;
-  return data.filter(item =>
-    item.group_code === currentGroup || item.group_code === "WykN"
-  );
-}
-
-// -----------------------------
-// Renderowanie
-// -----------------------------
+/* ---------------------------------------------
+   RENDERING
+--------------------------------------------- */
 function updateNoDataMessage() {
   const msg = document.getElementById("noDataMessage");
   if (!filteredData || filteredData.length === 0) {
@@ -555,7 +539,7 @@ function applyAllFilters() {
     base = filterByDateMode();
   }
 
-  filteredData = filterByGroup(base);
+  filteredData = base;
   updateNoDataMessage();
   render();
 }
@@ -621,16 +605,6 @@ function renderCards() {
       time.textContent = `${item.od}–${item.do}`;
       top.appendChild(time);
 
-      const tag = document.createElement("div");
-      tag.className = "group-tag";
-      if (item.group_code) {
-        tag.classList.add(`group-${item.group_code}`);
-        tag.textContent = item.group_code;
-      } else {
-        tag.textContent = "—";
-      }
-      top.appendChild(tag);
-
       card.appendChild(top);
 
       const main = document.createElement("div");
@@ -683,7 +657,6 @@ function renderTable() {
         item.data,
         item.od,
         item.do,
-        item.group_code || "",
         item.przedmiot,
         item.typ,
         item.sala,
@@ -699,7 +672,6 @@ function renderTable() {
         { title: "Data" },
         { title: "Od" },
         { title: "Do" },
-        { title: "Grupa" },
         { title: "Zajęcia" },
         { title: "Forma" },
         { title: "Sala" },
@@ -711,7 +683,7 @@ function renderTable() {
         url: "https://cdn.datatables.net/plug-ins/2.1.8/i18n/pl.json"
       },
       createdRow: function (row, data) {
-        const uwagi = (data[8] || "").toLowerCase();
+        const uwagi = (data[7] || "").toLowerCase();
         if (uwagi.includes("odwołane")) {
           row.classList.add("cancelled");
         }
@@ -724,9 +696,9 @@ function renderTable() {
   }
 }
 
-// -----------------------------
-// INIT
-// -----------------------------
+/* ---------------------------------------------
+   INIT
+--------------------------------------------- */
 async function init() {
   document.getElementById("noDataMessage").textContent = "Ładowanie danych…";
   document.getElementById("noDataMessage").style.display = "block";
@@ -745,31 +717,17 @@ async function init() {
     "Dane zaktualizowano: " +
     new Date(lastTimestamp * 1000).toLocaleString("pl-PL");
 
-  const groups = [...new Set(
-    fullData
-      .map(i => i.group_code)
-      .filter(code => code && code.startsWith("Ćw"))
-  )].sort();
-
-  const select = document.getElementById("groupSelect");
-  groups.forEach(g => {
-    const opt = document.createElement("option");
-    opt.value = g;
-    opt.textContent = g;
-    select.appendChild(opt);
-  });
-
   document.getElementById("noDataMessage").style.display = "none";
 
   applyAllFilters();
 }
 
-// -----------------------------
-// Eventy
-// -----------------------------
-document.getElementById("groupSelect").addEventListener("change", e => {
-  currentGroup = e.target.value;
-  applyAllFilters();
+/* ---------------------------------------------
+   EVENTS
+--------------------------------------------- */
+document.getElementById("specSelect").addEventListener("change", e => {
+  currentTok = e.target.value;
+  init();
 });
 
 document.querySelectorAll(".date-mode-btn").forEach(btn => {
@@ -802,9 +760,6 @@ document.getElementById("viewTable").addEventListener("click", () => {
   render();
 });
 
-// -----------------------------
-// Przycisk: Załaduj ponownie dane
-// -----------------------------
 document.getElementById("reloadBtn").addEventListener("click", async () => {
   document.getElementById("statusBox").textContent = "Odświeżanie…";
   document.getElementById("noDataMessage").style.display = "block";
@@ -827,8 +782,9 @@ document.getElementById("reloadBtn").addEventListener("click", async () => {
   applyAllFilters();
 });
 
-init();
-  // MOBILE MENU
+/* ---------------------------------------------
+   MOBILE MENU
+--------------------------------------------- */
 const mobileBtn = document.getElementById("mobileMenuBtn");
 const sidebar = document.querySelector(".sidebar");
 
@@ -845,7 +801,6 @@ mobileBtn.addEventListener("click", () => {
   sidebar.classList.toggle("open");
 });
 
-// Close sidebar when clicking outside
 document.addEventListener("click", (e) => {
   if (window.innerWidth > 768) return;
   if (!sidebar.contains(e.target) && e.target !== mobileBtn) {
@@ -856,8 +811,11 @@ document.addEventListener("click", (e) => {
 window.addEventListener("resize", updateMobileMode);
 updateMobileMode();
 
+/* ---------------------------------------------
+   START
+--------------------------------------------- */
+init();
 </script>
 
 </body>
 </html>
-
