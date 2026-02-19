@@ -1,22 +1,26 @@
 import time
 import requests
 from bs4 import BeautifulSoup
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 BASE = "https://harmonogramy.dsw.edu.pl"
-TOK_ID = "1337"
 
-URL_PAGE = f"{BASE}/Plany/PlanyTokow/{TOK_ID}"
-URL_GRID = f"{BASE}/Plany/PlanyTokowGridCustom/{TOK_ID}"
+# Lista dostępnych specjalizacji
+TOKS = {
+    "1337": "Animacja 3D",
+    "1336": "Game Art i Concept Design",
+    "1335": "Game Design"
+}
 
-# -----------------------------
-#   CACHE (pełny: TTL + fallback)
-# -----------------------------
+# CACHE per‑TOK
 CACHE = {
-    "data": None,          # ostatnie poprawne dane (lista zajęć)
-    "timestamp": 0,        # czas zapisania (time.time())
-    "ttl": 300             # 5 minut
+    tok: {
+        "data": None,
+        "timestamp": 0,
+        "ttl": 300
+    }
+    for tok in TOKS
 }
 
 app = FastAPI()
@@ -29,10 +33,10 @@ app.add_middleware(
 )
 
 
-# -----------------------------
-#   Pobieranie HTML z retry
-# -----------------------------
-def fetch_html():
+def fetch_html(tok: str):
+    URL_PAGE = f"{BASE}/Plany/PlanyTokow/{tok}"
+    URL_GRID = f"{BASE}/Plany/PlanyTokowGridCustom/{tok}"
+
     s = requests.Session()
     s.headers.update({"User-Agent": "Mozilla/5.0"})
     s.get(URL_PAGE)
@@ -44,7 +48,7 @@ def fetch_html():
         "gridViewPlanyTokow$custwindowState": '{"windowsState":"0:0:-1:0:0:0:-10000:-10000:1:0:0:0"}',
         "DXMVCEditorsValues": "{}",
         "parametry": "2025-9-6;2026-2-8;3;1199",
-        "id": TOK_ID,
+        "id": tok,
     }
 
     for attempt in range(3):
@@ -60,9 +64,6 @@ def fetch_html():
     return None
 
 
-# -----------------------------
-#   Pomocnicze funkcje
-# -----------------------------
 def extract_text(cell):
     return cell.get_text(strip=True) if cell else ""
 
@@ -74,9 +75,6 @@ def extract_group_code(full_group_name: str) -> str:
     return parts[-1] if parts else ""
 
 
-# -----------------------------
-#   Parser odporny na zmiany
-# -----------------------------
 def parse_plan(html):
     if not html:
         return None
@@ -87,111 +85,72 @@ def parse_plan(html):
         return None
 
     rows = table.find_all("tr")
-
     parsed = []
     current_date = None
 
     for row in rows:
         classes = row.get("class", [])
 
-        # -----------------------------
-        #   Wiersz grupujący (DATA)
-        # -----------------------------
         if "dxgvGroupRow_iOS" in classes:
             text = row.get_text(" ", strip=True)
-            # np. "Data Zajęć: 2025.10.25 sobota"
             if "Data Zajęć:" in text:
                 current_date = text.split("Data Zajęć:")[-1].strip()
             continue
 
-        # -----------------------------
-        #   Wiersz danych
-        # -----------------------------
         if "dxgvDataRow_iOS" in classes:
             cells = row.find_all("td")
-
-            # minimalna liczba komórek, żeby mieć sensowne dane
             if len(cells) < 10:
                 continue
 
-            # struktura:
-            # 0 = indent
-            # 1 = od
-            # 2 = do
-            # 3 = liczba godzin
-            # 4 = grupa (pełna nazwa)
-            # 5 = przedmiot
-            # 6 = forma
-            # 7 = sala
-            # 8 = prowadzący
-            # 9 = forma zaliczenia
-            # 10 = uwagi
-            # 11 = adaptive button (opcjonalnie)
-
-            od = extract_text(cells[1])
-            do = extract_text(cells[2])
-            godziny = extract_text(cells[3])
-            grupa_full = extract_text(cells[4])
-            przedmiot = extract_text(cells[5])
-            forma = extract_text(cells[6])
-            sala = extract_text(cells[7])
-            prowadzacy = extract_text(cells[8])
-            zaliczenie = extract_text(cells[9])
-            uwagi = extract_text(cells[10]) if len(cells) > 10 else ""
-
-            group_code = extract_group_code(grupa_full)
-
             parsed.append({
-                "data": current_date,
-                "od": od,
-                "do": do,
-                "godziny": godziny,
-                "group_code": group_code,
-                "przedmiot": przedmiot,
-                "typ": forma,
-                "sala": sala,
-                "prowadzacy": prowadzacy,
-                "zaliczenie": zaliczenie,
-                "uwagi": uwagi,
+                "data": extract_text(cells[1]),
+                "od": extract_text(cells[1]),
+                "do": extract_text(cells[2]),
+                "godziny": extract_text(cells[3]),
+                "group_code": extract_group_code(extract_text(cells[4])),
+                "przedmiot": extract_text(cells[5]),
+                "typ": extract_text(cells[6]),
+                "sala": extract_text(cells[7]),
+                "prowadzacy": extract_text(cells[8]),
+                "zaliczenie": extract_text(cells[9]),
+                "uwagi": extract_text(cells[10]) if len(cells) > 10 else "",
+                "data": current_date
             })
 
     return parsed if parsed else None
 
 
-# -----------------------------
-#   Główna logika z cache
-# -----------------------------
 @app.get("/plan")
-def get_plan():
-    now = time.time()
+def get_plan(request: Request):
+    tok = request.query_params.get("tok", "1337")
 
-    # 1. Jeśli cache jest świeży → zwróć cache
-    if CACHE["data"] and now - CACHE["timestamp"] < CACHE["ttl"]:
+    if tok not in TOKS:
+        return {"error": "Nieznany tok"}
+
+    now = time.time()
+    cache = CACHE[tok]
+
+    if cache["data"] and now - cache["timestamp"] < cache["ttl"]:
         return {
-            "timestamp": CACHE["timestamp"],
-            "data": CACHE["data"]
+            "timestamp": cache["timestamp"],
+            "data": cache["data"]
         }
 
-    # 2. Pobierz nowe dane
-    html = fetch_html()
+    html = fetch_html(tok)
     parsed = parse_plan(html)
 
-    # 3. Jeśli nowe dane są OK → zapisz do cache
     if parsed:
-        CACHE["data"] = parsed
-        CACHE["timestamp"] = now
+        cache["data"] = parsed
+        cache["timestamp"] = now
         return {
-            "timestamp": CACHE["timestamp"],
-            "data": CACHE["data"]
+            "timestamp": cache["timestamp"],
+            "data": cache["data"]
         }
 
-    # 4. Jeśli nowe dane są puste → zwróć cache (fallback)
-    if CACHE["data"]:
+    if cache["data"]:
         return {
-            "timestamp": CACHE["timestamp"],
-            "data": CACHE["data"]
+            "timestamp": cache["timestamp"],
+            "data": cache["data"]
         }
 
-    # 5. Jeśli nie ma nic → zwróć błąd
-    return {"error": "Brak danych z DSW. Spróbuj ponownie."}
-
+    return {"error": "Brak danych z DSW"}
