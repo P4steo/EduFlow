@@ -476,7 +476,6 @@
     </div>
   </main>
 </div>
-
 <script>
 const API_URL = "https://eduflow-qivy.onrender.com/plan";
 
@@ -719,8 +718,11 @@ function renderCards() {
     dayBlock.appendChild(title);
 
     items.sort((a, b) => {
-      const t = a.od.localeCompare(b.od);
-      if (t !== 0) return t;
+      const t1 = new Date(`2000-01-01T${a.od}:00`);
+      const t2 = new Date(`2000-01-01T${b.od}:00`);
+      const diff = t1 - t2;
+      if (diff !== 0) return diff;
+
       return (a.group_code || "").localeCompare(b.group_code || "");
     });
 
@@ -754,12 +756,16 @@ function renderCards() {
 
       const meta = document.createElement("div");
       meta.className = "card-meta";
-      meta.innerHTML = `
-        <span>Grupa: ${item.group_code || "—"}</span>
-        <span>${item.typ || ""}</span>
-        <span>${item.sala || ""}</span>
-        <span>${item.prowadzacy || ""}</span>
-      `;
+
+      if (!item.group_code) {
+        meta.innerHTML += `<span>Wykład</span>`;
+      } else {
+        meta.innerHTML += `<span>Grupa ${item.group_code}</span>`;
+      }
+
+      if (item.sala) meta.innerHTML += `<span>${item.sala}</span>`;
+      if (item.prowadzacy) meta.innerHTML += `<span>${item.prowadzacy}</span>`;
+
       card.appendChild(meta);
 
       const uwagiParts = [];
@@ -784,10 +790,16 @@ function renderCards() {
 function renderTable() {
   const rows = filteredData
     .sort((a, b) => {
-      const d = new Date(a.data.replace(/\./g, "-")) - new Date(b.data.replace(/\./g, "-"));
-      if (d !== 0) return d;
-      const t = a.od.localeCompare(b.od);
-      if (t !== 0) return t;
+      const d1 = new Date(a.data.replace(/\./g, "-"));
+      const d2 = new Date(b.data.replace(/\./g, "-"));
+      const diffDate = d1 - d2;
+      if (diffDate !== 0) return diffDate;
+
+      const t1 = new Date(`2000-01-01T${a.od}:00`);
+      const t2 = new Date(`2000-01-01T${b.od}:00`);
+      const diffTime = t1 - t2;
+      if (diffTime !== 0) return diffTime;
+
       return (a.group_code || "").localeCompare(b.group_code || "");
     })
     .map(item => {
@@ -800,9 +812,8 @@ function renderTable() {
         item.data,
         item.od,
         item.do,
-        item.group_code || "",
+        item.group_code ? `Grupa ${item.group_code}` : "Wykład",
         item.przedmiot,
-        item.typ,
         item.sala,
         item.prowadzacy,
         uwagiDisplay
@@ -816,9 +827,8 @@ function renderTable() {
         { title: "Data" },
         { title: "Od" },
         { title: "Do" },
-        { title: "Grupa" },
+        { title: "Grupa / Wykład" },
         { title: "Zajęcia" },
-        { title: "Forma" },
         { title: "Sala" },
         { title: "Prowadzący" },
         { title: "Uwagi" }
@@ -828,7 +838,7 @@ function renderTable() {
         url: "https://cdn.datatables.net/plug-ins/2.1.8/i18n/pl.json"
       },
       createdRow: function (row, data) {
-        const uwagi = (data[8] || "").toLowerCase();
+        const uwagi = (data[7] || "").toLowerCase();
         if (uwagi.includes("odwołane")) {
           row.classList.add("cancelled");
         }
