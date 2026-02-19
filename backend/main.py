@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 BASE = "https://harmonogramy.dsw.edu.pl"
-TOK_ID = "1199"
+TOK_ID = "1337"
 
 URL_PAGE = f"{BASE}/Plany/PlanyTokow/{TOK_ID}"
 URL_GRID = f"{BASE}/Plany/PlanyTokowGridCustom/{TOK_ID}"
@@ -194,3 +194,4 @@ def get_plan():
 
     # 5. Jeśli nie ma nic → zwróć błąd
     return {"error": "Brak danych z DSW. Spróbuj ponownie."}
+
