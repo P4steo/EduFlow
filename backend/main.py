@@ -43,13 +43,20 @@ def fetch_html(tok: str):
         "Referer": URL_PAGE,
     })
 
-    # Pobierz stronę, aby ustawić cookies
     s.get(URL_PAGE)
 
-    # ⭐ POPRAWNY ZAKRES SEMESTRU (z Twojego payloadu)
-    start = "2026-2-2"
-    end = "2026-9-30"
-    mode = "3"
+    # ⭐ Automatyczny zakres semestru (wyciągnięty z cookies)
+    cookies = s.cookies.get_dict()
+    if "RadioList_TerminT" in cookies:
+        raw = cookies["RadioList_TerminT"]
+        parts = raw.split("\\")
+        start = parts[0].replace(",", "-")
+        end = parts[1].replace(",", "-")
+        mode = parts[2]
+    else:
+        start = "2026-2-2"
+        end = "2026-9-30"
+        mode = "3"
 
     payload = {
         "DXCallbackName": "gridViewPlanyTokow",
@@ -76,8 +83,10 @@ def extract_text(cell):
 def extract_group_code(full_group_name: str) -> str:
     if not full_group_name:
         return ""
-    parts = full_group_name.split()
-    return parts[-1] if parts else ""
+    # wyciągamy końcówkę np. Ćw2N → 2
+    import re
+    m = re.search(r"(\d+)", full_group_name)
+    return m.group(1) if m else ""
 
 def parse_plan(html):
     if not html:
