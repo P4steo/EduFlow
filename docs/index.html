@@ -70,6 +70,7 @@
       gap: 8px;
     }
 
+    /* KROPKA — STAN POCZĄTKOWY */
     .app-title span.logo-dot {
       width: 10px;
       height: 10px;
@@ -83,6 +84,41 @@
       color: var(--text-soft);
     }
 
+    /* ANIMACJA ODD BREATHING */
+    @keyframes pulse-breath {
+      0% { opacity: 0.4; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.15); }
+      100% { opacity: 0.4; transform: scale(1); }
+    }
+
+    /* STAN ŁADOWANIA — NIEBIESKA PULSUJĄCA */
+    .logo-dot.loading {
+      background: #38bdf8 !important;
+      animation: pulse-breath 1.2s ease-in-out infinite;
+      box-shadow: 0 0 10px rgba(56,189,248,0.6);
+    }
+
+    /* STAN ZAŁADOWANO — ZIELONA */
+    .logo-dot.loaded {
+      background: #4ade80 !important;
+      animation: none;
+      box-shadow: 0 0 10px rgba(74,222,128,0.6);
+    }
+
+    /* STAN BŁĘDU — CZERWONA */
+    .logo-dot.error {
+      background: #f87171 !important;
+      animation: none;
+      box-shadow: 0 0 10px rgba(248,113,113,0.6);
+    }
+
+    /* STAN SPOCZYNKOWY — NIEBIESKA BEZ ANIMACJI */
+    .logo-dot.idle {
+      background: radial-gradient(circle at 30% 30%, #e0f2fe, #38bdf8);
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.8);
+    }
+
+    /* RESZTA TWOJEGO CSS — BEZ ZMIAN */
     .filter-section {
       background: rgba(15, 23, 42, 0.9);
       border-radius: 10px;
@@ -407,7 +443,7 @@
   <aside class="sidebar">
     <div class="sidebar-header">
       <div class="app-title">
-        <span class="logo-dot"></span>
+        <span class="logo-dot idle"></span>
         <span>Plan zjazdów DSW</span>
       </div>
       <div class="app-subtitle">Game Design • Game Art • Animacja 3D</div>
@@ -490,6 +526,30 @@ let currentGroup = "all";
 
 let lastTimestamp = null;
 
+/* KROPKA — FUNKCJE STANÓW */
+function setDotLoading() {
+  const dot = document.querySelector(".logo-dot");
+  dot.classList.remove("loaded", "error", "idle");
+  dot.classList.add("loading");
+}
+
+function setDotLoaded() {
+  const dot = document.querySelector(".logo-dot");
+  dot.classList.remove("loading", "error", "idle");
+  dot.classList.add("loaded");
+
+  setTimeout(() => {
+    dot.classList.remove("loaded");
+    dot.classList.add("idle");
+  }, 3000);
+}
+
+function setDotError() {
+  const dot = document.querySelector(".logo-dot");
+  dot.classList.remove("loading", "loaded", "idle");
+  dot.classList.add("error");
+}
+
 /* FETCH + RETRY */
 async function fetchPlanWithRetry(retries = 5, delay = 1500) {
   for (let i = 0; i < retries; i++) {
@@ -507,7 +567,6 @@ async function fetchPlanWithRetry(retries = 5, delay = 1500) {
   }
   return null;
 }
-
 /* WEEKEND HELPERS */
 function nextWeekendDate(fromDate = new Date()) {
   const d = new Date(fromDate);
@@ -850,9 +909,9 @@ function renderTable() {
     table.draw();
   }
 }
-
 /* INIT */
 async function init() {
+  setDotLoading();
   document.getElementById("noDataMessage").textContent = "Ładowanie danych…";
   document.getElementById("noDataMessage").style.display = "block";
 
@@ -861,6 +920,7 @@ async function init() {
   if (!data) {
     document.getElementById("noDataMessage").textContent =
       "Brak danych z serwera. Spróbuj ponownie.";
+    setDotError();
     return;
   }
 
@@ -874,6 +934,7 @@ async function init() {
 
   updateGroupFilter();
   applyAllFilters();
+  setDotLoaded();
 }
 
 /* EVENTS */
@@ -918,6 +979,7 @@ document.getElementById("viewTable").addEventListener("click", () => {
 });
 
 document.getElementById("reloadBtn").addEventListener("click", async () => {
+  setDotLoading();
   document.getElementById("statusBox").textContent = "Odświeżanie…";
   document.getElementById("noDataMessage").style.display = "block";
   document.getElementById("noDataMessage").textContent = "Ładowanie danych…";
@@ -927,6 +989,7 @@ document.getElementById("reloadBtn").addEventListener("click", async () => {
   if (!data) {
     document.getElementById("noDataMessage").textContent =
       "Brak danych z serwera. Spróbuj ponownie.";
+    setDotError();
     return;
   }
 
@@ -938,6 +1001,7 @@ document.getElementById("reloadBtn").addEventListener("click", async () => {
 
   updateGroupFilter();
   applyAllFilters();
+  setDotLoaded();
 });
 
 /* MOBILE MENU */
@@ -970,6 +1034,5 @@ updateMobileMode();
 /* START */
 init();
 </script>
-
 </body>
 </html>
