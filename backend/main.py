@@ -101,18 +101,30 @@ def parse_plan(html):
     parsed = []
     current_date = None
 
-    # 🔥 znajdź indeks kolumny "Grupa"
-    header = table.find("tr", {"class": "dxgvHeader_iOS"})
+    # 🔥 znajdź pierwszy wiersz danych
+    first_data_row = None
+    for row in rows:
+        if "dxgvDataRow_iOS" in row.get("class", []):
+            first_data_row = row
+            break
+
+    if not first_data_row:
+        return None
+
+    cells = first_data_row.find_all("td")
+
+    # 🔥 wykryj kolumnę grupy po wzorcu Ćw\d+N lub WykN
+    import re
     group_col_index = None
+    group_pattern = re.compile(r"(Ćw\d+N|WykN)", re.IGNORECASE)
 
-    if header:
-        headers = header.find_all("td")
-        for i, h in enumerate(headers):
-            if "grupa" in h.get_text(strip=True).lower():
-                group_col_index = i
-                break
+    for i, c in enumerate(cells):
+        text = c.get_text(strip=True)
+        if group_pattern.search(text):
+            group_col_index = i
+            break
 
-    # fallback jeśli nie znaleziono
+    # fallback
     if group_col_index is None:
         group_col_index = 4
 
@@ -130,24 +142,80 @@ def parse_plan(html):
             if len(cells) < 10:
                 continue
 
-            group_raw = extract_text(cells[group_col_index])
-            group_code = extract_group_code(group_raw)
+            group_raw = cells[group_col_index].get_text(strip=True)
+
+            # wyciągamy numer grupy
+            m = re.search(r"Ćw(\d+)N", group_raw)
+            group_code = m.group(1) if m else ""
 
             parsed.append({
                 "data": current_date,
-                "od": extract_text(cells[1]),
-                "do": extract_text(cells[2]),
-                "godziny": extract_text(cells[3]),
+                "od": cells[1].get_text(strip=True),
+                "do": cells[2].get_text(strip=True),
+                "godziny": cells[3].get_text(strip=True),
                 "group_code": group_code,
-                "przedmiot": extract_text(cells[5]),
-                "typ": extract_text(cells[6]),
-                "sala": extract_text(cells[7]),
-                "prowadzacy": extract_text(cells[8]),
-                "zaliczenie": extract_text(cells[9]),
-                "uwagi": extract_text(cells[10]) if len(cells) > 10 else "",
+                "przedmiot": cells[5].get_text(strip=True),
+                "typ": cells[6].get_text(strip=True),
+                "sala": cells[7].get_text(strip=True),
+                "prowadzacy": cells[8].get_text(strip=True),
+                "zaliczenie": cells[9].get_text(strip=True),
+                "uwagi": cells[10].get_text(strip=True) if len(cells) > 10 else "",
             })
 
     return parsed if parsed else None
+
+def detect_group_column(html):
+    """
+    Zwraca informacje diagnostyczne:
+    - indeks wykrytej kolumny grupy
+    - surowy tekst z tej kolumny
+    - regex który zadziałał
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    table = soup.find("table", {"id": "gridViewPlanyTokow_DXMainTable"})
+    if not table:
+        return {"error": "Brak tabeli"}
+
+    rows = table.find_all("tr")
+
+    # znajdź pierwszy wiersz danych
+    first_data_row = None
+    for row in rows:
+        if "dxgvDataRow_iOS" in row.get("class", []):
+            first_data_row = row
+            break
+
+    if not first_data_row:
+        return {"error": "Brak wiersza danych"}
+
+    cells = first_data_row.find_all("td")
+    cell_texts = [c.get_text(strip=True) for c in cells]
+
+    import re
+    patterns = {
+        "cw": re.compile(r"Ćw(\d+)N", re.IGNORECASE),
+        "wyk": re.compile(r"WykN", re.IGNORECASE),
+        "num": re.compile(r"\b(\d+)\b")
+    }
+
+    detected = []
+
+    for i, text in enumerate(cell_texts):
+        for name, regex in patterns.items():
+            m = regex.search(text)
+            if m:
+                detected.append({
+                    "column_index": i,
+                    "raw_text": text,
+                    "pattern": name,
+                    "match": m.group(0)
+                })
+
+    return {
+        "cells": cell_texts,
+        "detected": detected
+    }
+
 
 @app.get("/plan")
 def get_plan(request: Request):
@@ -183,4 +251,17 @@ def get_plan(request: Request):
         }
 
     return {"error": "Brak danych z DSW"}
+
+@app.get("/debug-group")
+def debug_group(request: Request):
+    tok = request.query_params.get("tok", "1337")
+
+    html = fetch_html(tok)
+    if not html:
+        return {"error": "Brak HTML z DSW"}
+
+    info = detect_group_column(html)
+    return info
+
+
 
