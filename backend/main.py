@@ -6,7 +6,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 BASE = "https://harmonogramy.dsw.edu.pl"
 
-# Dostępne TOK-i
 TOKS = {
     "1337": "Animacja 3D",
     "1336": "Game Art i Concept Design",
@@ -14,7 +13,6 @@ TOKS = {
     "1199": "Poprzedni tok (legacy)"
 }
 
-# Cache per tok
 CACHE = {
     tok: {
         "data": None,
@@ -33,12 +31,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 def fetch_html(tok: str):
-    """
-    Pobiera HTML grida dla danego toku.
-    Kluczowa zmiana: w 'parametry' na końcu używamy aktualnego TOK, a nie na sztywno 1199.
-    """
     URL_PAGE = f"{BASE}/Plany/PlanyTokow/{tok}"
     URL_GRID = f"{BASE}/Plany/PlanyTokowGridCustom/{tok}"
 
@@ -50,46 +43,41 @@ def fetch_html(tok: str):
         "Referer": URL_PAGE,
     })
 
-    # Najpierw wejście na stronę, żeby serwer ustawił ewentualną sesję
+    # Pobierz stronę, aby ustawić cookies
     s.get(URL_PAGE)
 
-    # UWAGA: tu była główna pomyłka – ostatni argument to ID TOKU
-    # Poprzednio: "2025-9-6;2026-2-8;3;1199"
-    # Teraz:      "2025-9-6;2026-2-8;3;{tok}"
+    # ⭐ POPRAWNY ZAKRES SEMESTRU (z Twojego payloadu)
+    start = "2026-2-2"
+    end = "2026-9-30"
+    mode = "3"
+
     payload = {
         "DXCallbackName": "gridViewPlanyTokow",
         "__DXCallbackArgument": "c0:KV|2;[];GB|35;14|CUSTOMCALLBACK15|[object Object];",
         "gridViewPlanyTokow": '{"customOperationState":"","keys":[],"callbackState":"","groupLevelState":{},"selection":"","toolbar":null}',
         "gridViewPlanyTokow$custwindowState": '{"windowsState":"0:0:-1:0:0:0:-10000:-10000:1:0:0:0"}',
         "DXMVCEditorsValues": "{}",
-        # jeśli będziesz chciał, możemy później zautomatyzować daty
-        "parametry": f"2025-9-6;2026-2-8;3;{tok}",
+        "parametry": f"{start};{end};{mode};{tok}",
         "id": tok,
     }
 
     for _ in range(3):
         r = s.post(URL_GRID, data=payload)
-        r.raise_for_status()
         html = r.text
-
         if "<td" in html.lower():
             return html
-
         time.sleep(1)
 
     return None
 
-
 def extract_text(cell):
     return cell.get_text(strip=True) if cell else ""
-
 
 def extract_group_code(full_group_name: str) -> str:
     if not full_group_name:
         return ""
     parts = full_group_name.split()
     return parts[-1] if parts else ""
-
 
 def parse_plan(html):
     if not html:
@@ -107,14 +95,12 @@ def parse_plan(html):
     for row in rows:
         classes = row.get("class", [])
 
-        # wiersz z datą zajęć
         if "dxgvGroupRow_iOS" in classes:
             text = row.get_text(" ", strip=True)
             if "Data Zajęć:" in text:
                 current_date = text.split("Data Zajęć:")[-1].strip()
             continue
 
-        # wiersz z danymi
         if "dxgvDataRow_iOS" in classes:
             cells = row.find_all("td")
             if len(cells) < 10:
@@ -136,7 +122,6 @@ def parse_plan(html):
 
     return parsed if parsed else None
 
-
 @app.get("/plan")
 def get_plan(request: Request):
     tok = request.query_params.get("tok", "1337")
@@ -147,14 +132,12 @@ def get_plan(request: Request):
     now = time.time()
     cache = CACHE[tok]
 
-    # cache hit
     if cache["data"] and now - cache["timestamp"] < cache["ttl"]:
         return {
             "timestamp": cache["timestamp"],
             "data": cache["data"]
         }
 
-    # pobierz z DSW
     html = fetch_html(tok)
     parsed = parse_plan(html)
 
@@ -166,7 +149,6 @@ def get_plan(request: Request):
             "data": cache["data"]
         }
 
-    # fallback – jeśli kiedyś były dane, zwróć stare
     if cache["data"]:
         return {
             "timestamp": cache["timestamp"],
