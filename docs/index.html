@@ -72,6 +72,36 @@ body {
   font-weight: 600;
 }
 
+.sidebar h3 {
+  margin-top: 20px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.sidebar select,
+.sidebar button,
+.sidebar input[type="date"] {
+  width: 100%;
+  margin-top: 6px;
+  margin-bottom: 10px;
+  padding: 8px;
+  background: var(--bg-softer);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 6px;
+}
+
+.sidebar button {
+  cursor: pointer;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent);
+}
+
+.sidebar button.active {
+  background: var(--accent);
+  color: #fff;
+}
+
 /* ---------------------------------------------------
    1E — TOPBAR (mobile + desktop)
 --------------------------------------------------- */
@@ -243,21 +273,8 @@ body {
 </div>
 <script>
 /* ---------------------------------------------------
-   3A — KROPKA + FETCH + ZMIENNE
+   3A — KROPKA STATUSU
 --------------------------------------------------- */
-const API_URL = "https://eduflow-qivy.onrender.com/plan";
-
-let fullData = [];
-let filteredData = [];
-let table = null;
-
-let currentView = "cards";
-let currentDateMode = "nearest";
-let currentTok = "1337";
-let currentGroup = "all";
-
-let lastTimestamp = null;
-
 function setDotLoading() {
   const dot = document.querySelector(".logo-dot");
   dot.classList.remove("loaded", "error", "idle");
@@ -280,6 +297,22 @@ function setDotError() {
   dot.classList.add("error");
 }
 
+/* ---------------------------------------------------
+   3A — FETCH + RETRY
+--------------------------------------------------- */
+const API_URL = "https://eduflow-qivy.onrender.com/plan";
+
+let fullData = [];
+let filteredData = [];
+let table = null;
+
+let currentView = "cards";
+let currentDateMode = "nearest";
+let currentTok = "1337";
+let currentGroup = "all";
+
+let lastTimestamp = null;
+
 async function fetchPlanWithRetry(retries = 5, delay = 1500) {
   for (let i = 0; i < retries; i++) {
     try {
@@ -294,11 +327,9 @@ async function fetchPlanWithRetry(retries = 5, delay = 1500) {
   }
   return null;
 }
-
-/* ---------------------------------------------------
-   3B — FILTRY + RENDEROWANIE
---------------------------------------------------- */
-/* WEEKEND HELPERS */
+<!-- ---------------------------------------------------
+     3B — WEEKEND HELPERS
+--------------------------------------------------- -->
 function nextWeekendDate(fromDate = new Date()) {
   const d = new Date(fromDate);
   while (true) {
@@ -349,7 +380,9 @@ function findNextWeekendRange(currentRange) {
   return { sat: satStr, sun: sunStr };
 }
 
-/* FILTERING */
+/* ---------------------------------------------------
+   3B — FILTRY
+--------------------------------------------------- */
 function filterByDateMode() {
   if (currentDateMode === "all") {
     document.getElementById("currentRangeLabel").textContent = "Cały semestr";
@@ -414,7 +447,6 @@ function applyGroupFilter(base) {
   });
 }
 
-/* GROUP FILTER UI */
 function updateGroupFilter() {
   const select = document.getElementById("groupSelect");
   const groups = new Set();
@@ -430,8 +462,10 @@ function updateGroupFilter() {
     select.innerHTML += `<option value="${g}">Grupa ${g}</option>`;
   });
 }
+<!-- ---------------------------------------------------
+     3C — RENDEROWANIE (karty + tabela)
+--------------------------------------------------- -->
 
-/* RENDERING */
 function updateNoDataMessage() {
   const msg = document.getElementById("noDataMessage");
   if (!filteredData || filteredData.length === 0) {
@@ -476,6 +510,9 @@ function render() {
   }
 }
 
+/* ---------------------------------------------------
+   3C — GRUPOWANIE PO DACIE
+--------------------------------------------------- */
 function groupByDate(data) {
   const map = {};
   data.forEach(item => {
@@ -485,6 +522,9 @@ function groupByDate(data) {
   return Object.entries(map).sort((a, b) => new Date(a[0]) - new Date(b[0]));
 }
 
+/* ---------------------------------------------------
+   3C — RENDER KART
+--------------------------------------------------- */
 function renderCards() {
   const container = document.getElementById("cardsContainer");
   container.innerHTML = "";
@@ -577,6 +617,9 @@ function renderCards() {
   });
 }
 
+/* ---------------------------------------------------
+   3C — RENDER TABELI
+--------------------------------------------------- */
 function renderTable() {
   const rows = filteredData
     .sort((a, b) => {
@@ -640,11 +683,9 @@ function renderTable() {
     table.draw();
   }
 }
-
-
-/* ---------------------------------------------------
-   3C — MOTYW + MODAL + MOBILE UI
---------------------------------------------------- */
+<!-- ---------------------------------------------------
+     3D — MOTYW JASNY/CIEMNY + ANIMACJA 🌓
+--------------------------------------------------- -->
 function applyInitialTheme() {
   const saved = localStorage.getItem("theme");
   if (saved) {
@@ -664,7 +705,11 @@ themeBtn.addEventListener("click", () => {
   localStorage.setItem("theme", isLight ? "light" : "dark");
 });
 
-/* MODAL FILTRÓW */
+
+
+/* ---------------------------------------------------
+   3D — MODAL FILTRÓW (mobile)
+--------------------------------------------------- */
 const filterModal = document.getElementById("filterModal");
 const modalSidebar = document.getElementById("modalSidebar");
 const closeFilterModal = document.getElementById("closeFilterModal");
@@ -678,9 +723,107 @@ closeFilterModal.addEventListener("click", () => {
   filterModal.style.display = "none";
 });
 
-/* START */
+
+
+/* ---------------------------------------------------
+   3D — EVENT LISTENERY
+--------------------------------------------------- */
+document.getElementById("specSelect").addEventListener("change", e => {
+  currentTok = e.target.value;
+  init();
+});
+
+document.getElementById("groupSelect").addEventListener("change", e => {
+  currentGroup = e.target.value;
+  applyAllFilters();
+});
+
+document.querySelectorAll(".date-mode-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".date-mode-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    currentDateMode = btn.dataset.mode;
+    document.getElementById("customDates").style.display =
+      currentDateMode === "custom" ? "flex" : "none";
+    applyAllFilters();
+  });
+});
+
+document.getElementById("applyCustomDates").addEventListener("click", () => {
+  currentDateMode = "custom";
+  applyAllFilters();
+});
+
+document.getElementById("viewCards").addEventListener("click", () => {
+  currentView = "cards";
+  document.getElementById("viewCards").classList.add("active");
+  document.getElementById("viewTable").classList.remove("active");
+  render();
+});
+
+document.getElementById("viewTable").addEventListener("click", () => {
+  currentView = "table";
+  document.getElementById("viewTable").classList.add("active");
+  document.getElementById("viewCards").classList.remove("active");
+  render();
+});
+
+document.getElementById("reloadBtn").addEventListener("click", async () => {
+  setDotLoading();
+  document.getElementById("statusBox").textContent = "Odświeżanie…";
+  document.getElementById("noDataMessage").style.display = "block";
+  document.getElementById("noDataMessage").textContent = "Ładowanie danych…";
+
+  const data = await fetchPlanWithRetry();
+
+  if (!data) {
+    document.getElementById("noDataMessage").textContent =
+      "Brak danych z serwera. Spróbuj ponownie.";
+    setDotError();
+    return;
+  }
+
+  fullData = data;
+
+  document.getElementById("statusBox").textContent =
+    "Dane zaktualizowano: " +
+    new Date(lastTimestamp * 1000).toLocaleString("pl-PL");
+
+  updateGroupFilter();
+  applyAllFilters();
+  setDotLoaded();
+});
+
+
+
+/* ---------------------------------------------------
+   3D — INIT
+--------------------------------------------------- */
+async function init() {
+  setDotLoading();
+  document.getElementById("noDataMessage").textContent = "Ładowanie danych…";
+
+  const data = await fetchPlanWithRetry();
+
+  if (!data) {
+    document.getElementById("noDataMessage").textContent =
+      "Brak danych z serwera. Spróbuj ponownie.";
+    setDotError();
+    return;
+  }
+
+  fullData = data;
+
+  document.getElementById("statusBox").textContent =
+    "Dane zaktualizowano: " +
+    new Date(lastTimestamp * 1000).toLocaleString("pl-PL");
+
+  updateGroupFilter();
+  applyAllFilters();
+  setDotLoaded();
+}
+
 init();
 </script>
 </body>
 </html>
-
