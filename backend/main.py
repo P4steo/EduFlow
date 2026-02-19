@@ -101,6 +101,21 @@ def parse_plan(html):
     parsed = []
     current_date = None
 
+    # 🔥 znajdź indeks kolumny "Grupa"
+    header = table.find("tr", {"class": "dxgvHeader_iOS"})
+    group_col_index = None
+
+    if header:
+        headers = header.find_all("td")
+        for i, h in enumerate(headers):
+            if "grupa" in h.get_text(strip=True).lower():
+                group_col_index = i
+                break
+
+    # fallback jeśli nie znaleziono
+    if group_col_index is None:
+        group_col_index = 4
+
     for row in rows:
         classes = row.get("class", [])
 
@@ -115,12 +130,15 @@ def parse_plan(html):
             if len(cells) < 10:
                 continue
 
+            group_raw = extract_text(cells[group_col_index])
+            group_code = extract_group_code(group_raw)
+
             parsed.append({
                 "data": current_date,
                 "od": extract_text(cells[1]),
                 "do": extract_text(cells[2]),
                 "godziny": extract_text(cells[3]),
-                "group_code": extract_group_code(extract_text(cells[4])),
+                "group_code": group_code,
                 "przedmiot": extract_text(cells[5]),
                 "typ": extract_text(cells[6]),
                 "sala": extract_text(cells[7]),
@@ -165,3 +183,4 @@ def get_plan(request: Request):
         }
 
     return {"error": "Brak danych z DSW"}
+
