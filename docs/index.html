@@ -2,250 +2,387 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8" />
-  <title>EduFlow – plan zajęć</title>
+  <title>Plan zjazdów DSW</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <!-- DataTables + jQuery -->
   <link rel="stylesheet" href="https://cdn.datatables.net/2.1.8/css/dataTables.dataTables.min.css">
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.datatables.net/2.1.8/js/dataTables.min.js"></script>
 
   <style>
     :root {
-      --bg: #f3f4f6;
-      --card-bg: #ffffff;
-      --border: #d1d5db;
-      --text-main: #111827;
-      --text-muted: #6b7280;
-      --accent: #2563eb;
-      --accent-soft: #dbeafe;
-      --danger-soft: #fee2e2;
-      --danger-border: #fecaca;
-      --day-separator: #9ca3af;
+      --bg: #0f172a;
+      --bg-soft: #111827;
+      --bg-softer: #020617;
+      --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.15);
+      --text: #e5e7eb;
+      --text-soft: #9ca3af;
+      --border: #1f2937;
+      --danger: #f97373;
+    }
+
+    * {
+      box-sizing: border-box;
     }
 
     body {
       margin: 0;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: var(--bg);
-      color: var(--text-main);
+      background: radial-gradient(circle at top, #1e293b 0, #020617 55%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app {
       display: flex;
       min-height: 100vh;
     }
 
     .sidebar {
-      width: 260px;
-      background: #e5e7eb;
+      width: 280px;
+      background: linear-gradient(180deg, #020617 0%, #020617 40%, #020617 100%);
       border-right: 1px solid var(--border);
-      padding: 20px;
-      box-sizing: border-box;
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: relative;
+      z-index: 10;
     }
 
-    .sidebar h1 {
-      font-size: 20px;
-      margin: 0 0 16px;
+    .sidebar-header {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 8px;
     }
 
-    .sidebar section {
-      margin-bottom: 20px;
+    .app-title {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
-    .sidebar label {
-      display: block;
-      font-size: 13px;
-      margin-bottom: 4px;
-      color: var(--text-muted);
+    .app-title span.logo-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 30%, #e0f2fe, #38bdf8);
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.8);
     }
 
-    .sidebar select,
-    .sidebar button {
+    .app-subtitle {
+      font-size: 12px;
+      color: var(--text-soft);
+    }
+
+    .filter-section {
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: 10px;
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      padding: 10px 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .filter-section h3 {
+      margin: 0;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-soft);
+    }
+
+    select,
+    button,
+    input[type="date"] {
       width: 100%;
-      box-sizing: border-box;
       padding: 6px 8px;
-      border-radius: 6px;
+      border-radius: 8px;
       border: 1px solid var(--border);
-      background: #f9fafb;
-      font-size: 14px;
+      background: #020617;
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+    }
+
+    select:focus,
+    input[type="date"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.4);
+    }
+
+    .date-modes {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .date-mode-btn {
+      flex: 1;
+      padding: 6px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #020617;
+      color: var(--text-soft);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
       cursor: pointer;
+      white-space: nowrap;
     }
 
-    .sidebar button {
-      margin-top: 6px;
-      background: #e5e7eb;
-    }
-
-    .sidebar button.active {
+    .date-mode-btn.active {
       background: var(--accent-soft);
       border-color: var(--accent);
       color: var(--accent);
-      font-weight: 600;
     }
 
     .view-toggle {
       display: flex;
-      gap: 8px;
+      gap: 6px;
     }
 
     .view-toggle button {
       flex: 1;
+      padding: 6px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #020617;
+      color: var(--text-soft);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+    }
+
+    .view-toggle button.active {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .status-box {
+      margin-top: auto;
+      font-size: 11px;
+      color: var(--text-soft);
+      padding-top: 8px;
+      border-top: 1px dashed var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .status-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-pill {
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid var(--border);
+      font-size: 10px;
+      color: var(--text-soft);
+    }
+
+    .reload-btn {
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #020617;
+      color: var(--text-soft);
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .reload-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
     }
 
     .main {
       flex: 1;
-      padding: 20px;
-      box-sizing: border-box;
-      overflow: auto;
-    }
-
-    .header-line {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      margin-bottom: 12px;
-    }
-
-    .header-line h2 {
-      margin: 0;
-      font-size: 18px;
-    }
-
-    .header-line span {
-      font-size: 13px;
-      color: var(--text-muted);
-    }
-
-    #reloadBtn {
-      margin-left: 10px;
-      padding: 6px 10px;
-      border-radius: 6px;
-      background: var(--accent-soft);
-      border: 1px solid var(--accent);
-      color: var(--accent);
-      font-size: 13px;
-      cursor: pointer;
-    }
-
-    #noDataMessage {
-      margin-bottom: 12px;
-      font-size: 13px;
-      color: var(--text-muted);
-      padding: 8px 10px;
-      border-radius: 6px;
-      background: #e5e7eb;
-      display: none;
-    }
-
-    #tableContainer {
-      display: none;
-    }
-
-    table.dataTable tbody tr.cancelled {
-      background: var(--danger-soft) !important;
-    }
-
-    #cardsContainer {
+      padding: 16px 18px;
       display: flex;
       flex-direction: column;
       gap: 12px;
     }
 
+    .range-label {
+      font-size: 13px;
+      color: var(--text-soft);
+    }
+
+    .no-data {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px dashed var(--border);
+      background: rgba(15, 23, 42, 0.7);
+      font-size: 13px;
+      color: var(--text-soft);
+      display: none;
+    }
+
+    .cards-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
     .day-block {
-      border-top: 1px solid var(--day-separator);
-      padding-top: 10px;
-      margin-top: 10px;
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: 12px;
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
 
     .day-title {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
-      color: var(--day-separator);
-      margin-bottom: 6px;
+      color: var(--text-soft);
+      margin-bottom: 4px;
     }
 
     .card {
-      background: var(--card-bg);
+      background: #020617;
       border-radius: 10px;
       border: 1px solid var(--border);
-      padding: 10px 12px;
+      padding: 8px 9px;
       display: flex;
       flex-direction: column;
       gap: 4px;
+      position: relative;
     }
 
     .card.cancelled {
-      background: var(--danger-soft);
-      border-color: var(--danger-border);
+      opacity: 0.5;
+      border-color: var(--danger);
     }
 
     .card-top {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 13px;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-soft);
     }
 
     .time {
       font-weight: 600;
+      color: var(--accent);
     }
 
     .card-main {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 500;
     }
 
     .card-meta {
-      font-size: 12px;
-      color: var(--text-muted);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-soft);
     }
 
     .card-meta span {
-      margin-right: 10px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid var(--border);
     }
 
     .card-uwagi {
-      font-size: 12px;
+      font-size: 11px;
+      color: var(--text-soft);
       margin-top: 2px;
     }
 
-    #statusBox {
-      position: fixed;
-      bottom: 10px;
-      right: 10px;
-      background: #e5e7eb;
-      padding: 6px 10px;
-      border-radius: 6px;
-      font-size: 12px;
-      color: #374151;
-      opacity: 0.85;
+    /* Kolory grup – pastelowe */
+    .card.group-1 { border-left: 4px solid #ff6b6b; }
+    .card.group-2 { border-left: 4px solid #4dabf7; }
+    .card.group-3 { border-left: 4px solid #51cf66; }
+    .card.group-4 { border-left: 4px solid #845ef7; }
+    .card.group-5 { border-left: 4px solid #ffa94d; }
+    .card.group-6 { border-left: 4px solid #20c997; }
+    .card.group-7 { border-left: 4px solid #e64980; }
+
+    .table-container {
+      display: none;
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: 12px;
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      padding: 10px;
     }
 
-    /* MOBILE MODE */
+    table.dataTable {
+      color: var(--text);
+      font-size: 12px;
+    }
+
+    table.dataTable thead th {
+      background: #020617;
+      border-bottom: 1px solid var(--border);
+    }
+
+    table.dataTable tbody tr.cancelled {
+      opacity: 0.5;
+      color: var(--danger);
+    }
+
+    #customDates {
+      display: none;
+      gap: 6px;
+    }
+
+    #customDates input {
+      font-size: 12px;
+    }
+
+    #mobileMenuBtn {
+      display: none;
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      z-index: 20;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.95);
+      color: var(--text-soft);
+      font-size: 12px;
+      cursor: pointer;
+    }
+
     @media (max-width: 768px) {
-
-      body {
+      .app {
         flex-direction: column;
-      }
-
-      #mobileMenuBtn {
-        display: block;
-        position: fixed;
-        top: 10px;
-        left: 10px;
-        z-index: 9999;
-        background: #2563eb;
-        color: white;
-        border: none;
-        padding: 10px 14px;
-        border-radius: 6px;
-        font-size: 18px;
       }
 
       .sidebar {
         position: fixed;
         top: 0;
-        left: -280px;
-        width: 260px;
+        left: -320px;
         height: 100vh;
-        background: #e5e7eb;
-        transition: left 0.3s ease;
-        z-index: 9998;
-        overflow-y: auto;
+        width: 260px;
+        transition: left 0.2s ease-out;
       }
 
       .sidebar.open {
@@ -253,128 +390,93 @@
       }
 
       .main {
-        margin-top: 60px;
-        padding: 12px;
+        padding-top: 44px;
       }
 
-      #cardsContainer {
-        gap: 16px;
-      }
-
-      .card {
-        padding: 14px;
-      }
-
-      #tableContainer {
-        overflow-x: auto;
-      }
-
-      table {
-        min-width: 900px;
-      }
-
-      .sidebar button,
-      .sidebar select {
-        padding: 10px 12px;
-        font-size: 16px;
-      }
-
-      #statusBox {
-        bottom: 70px;
-        right: 10px;
+      #mobileMenuBtn {
+        display: block;
       }
     }
   </style>
 </head>
 <body>
 
-  <!-- HAMBURGER (mobile only) -->
-  <button id="mobileMenuBtn" style="display:none;">☰</button>
+<button id="mobileMenuBtn">Filtry</button>
 
-  <!-- SIDEBAR -->
+<div class="app">
   <aside class="sidebar">
-    <h1>EduFlow</h1>
+    <div class="sidebar-header">
+      <div class="app-title">
+        <span class="logo-dot"></span>
+        <span>Plan zjazdów DSW</span>
+      </div>
+      <div class="app-subtitle">Game Design • Game Art • Animacja 3D</div>
+    </div>
 
-    <!-- SPECJALIZACJA -->
-    <section>
-      <label for="specSelect">Specjalizacja</label>
+    <div class="filter-section">
+      <h3>Specjalizacja</h3>
       <select id="specSelect">
         <option value="1337">Animacja 3D</option>
         <option value="1336">Game Art i Concept Design</option>
         <option value="1335">Game Design</option>
       </select>
-    </section>
+    </div>
 
-    <!-- ZAKRES DAT -->
-    <section>
-      <label>Zakres dat</label>
-      <button class="date-mode-btn active" data-mode="nearest">Najbliższy zjazd</button>
-      <button class="date-mode-btn" data-mode="next">Następny zjazd</button>
-      <button class="date-mode-btn" data-mode="all">Cały semestr</button>
-      <button class="date-mode-btn" data-mode="custom">Własny zakres</button>
+    <div class="filter-section">
+      <h3>Grupa</h3>
+      <select id="groupSelect">
+        <option value="all">Wszystkie</option>
+      </select>
+      <small style="font-size:11px;color:var(--text-soft);">
+        „Moja grupa” = wybrana grupa + wykłady wspólne
+      </small>
+    </div>
 
-      <div id="customDates" style="margin-top:8px; display:none;">
-        <input type="date" id="startDate" style="margin-bottom:4px; width:100%;">
-        <input type="date" id="endDate" style="width:100%;">
-        <button id="applyCustomDates" style="margin-top:4px;">Zastosuj</button>
+    <div class="filter-section">
+      <h3>Zakres dat</h3>
+      <div class="date-modes">
+        <button class="date-mode-btn active" data-mode="nearest">Najbliższy zjazd</button>
+        <button class="date-mode-btn" data-mode="next">Następny</button>
+        <button class="date-mode-btn" data-mode="all">Cały semestr</button>
+        <button class="date-mode-btn" data-mode="custom">Własny</button>
       </div>
-    </section>
+      <div id="customDates">
+        <input type="date" id="startDate">
+        <input type="date" id="endDate">
+        <button id="applyCustomDates">OK</button>
+      </div>
+    </div>
 
-    <!-- WIDOK -->
-    <section>
-      <label>Widok</label>
+    <div class="filter-section">
+      <h3>Widok</h3>
       <div class="view-toggle">
         <button id="viewCards" class="active">Karty</button>
         <button id="viewTable">Tabela</button>
       </div>
-    </section>
+    </div>
 
-    <!-- RELOAD -->
-    <section>
-      <button id="reloadBtn">Załaduj ponownie dane</button>
-    </section>
+    <div class="status-box">
+      <div class="status-line">
+        <span class="status-pill" id="statusBox">Ładowanie…</span>
+        <button class="reload-btn" id="reloadBtn">Odśwież</button>
+      </div>
+      <div style="font-size:11px;color:var(--text-soft);">
+        <span id="currentRangeLabel">Najbliższy zjazd</span>
+      </div>
+    </div>
   </aside>
 
-  <!-- MAIN CONTENT -->
   <main class="main">
-    <div class="header-line">
-      <h2>Plan zajęć – DSW</h2>
-      <span id="currentRangeLabel"></span>
-    </div>
+    <div id="noDataMessage" class="no-data">Ładowanie danych…</div>
 
-    <div id="noDataMessage">
-      Brak danych do wyświetlenia. Wybierz inną datę lub poczekaj – dane są generowane.
-    </div>
+    <div id="cardsContainer" class="cards-container"></div>
 
-    <!-- KARTY -->
-    <div id="cardsContainer"></div>
-
-    <!-- TABELA -->
-    <div id="tableContainer">
-      <table id="planTable" class="display" style="width:100%">
-        <thead>
-          <tr>
-            <th>Data</th>
-            <th>Od</th>
-            <th>Do</th>
-            <th>Zajęcia</th>
-            <th>Forma</th>
-            <th>Sala</th>
-            <th>Prowadzący</th>
-            <th>Uwagi</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+    <div id="tableContainer" class="table-container">
+      <table id="planTable" style="width:100%;"></table>
     </div>
   </main>
+</div>
 
-  <!-- STATUS -->
-  <div id="statusBox">Ładowanie…</div>
-
-  <!-- JS LIBS -->
-  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-  <script src="https://cdn.datatables.net/2.1.8/js/dataTables.min.js"></script>
 <script>
 const API_URL = "https://eduflow-qivy.onrender.com/plan";
 
@@ -384,13 +486,12 @@ let table = null;
 
 let currentView = "cards";
 let currentDateMode = "nearest";
-let currentTok = "1337"; // domyślnie Animacja 3D
+let currentTok = "1337";
+let currentGroup = "all";
 
 let lastTimestamp = null;
 
-/* ---------------------------------------------
-   FETCH + RETRY
---------------------------------------------- */
+/* FETCH + RETRY */
 async function fetchPlanWithRetry(retries = 5, delay = 1500) {
   for (let i = 0; i < retries; i++) {
     try {
@@ -408,9 +509,7 @@ async function fetchPlanWithRetry(retries = 5, delay = 1500) {
   return null;
 }
 
-/* ---------------------------------------------
-   WEEKEND HELPERS
---------------------------------------------- */
+/* WEEKEND HELPERS */
 function nextWeekendDate(fromDate = new Date()) {
   const d = new Date(fromDate);
   while (true) {
@@ -436,8 +535,8 @@ function findNearestWeekendRange() {
     const satStr = saturday.toISOString().split("T")[0].replace(/-/g, ".");
     const sunStr = sunday.toISOString().split("T")[0].replace(/-/g, ".");
 
-    const hasSat = fullData.some(item => item.data.includes(satStr));
-    const hasSun = fullData.some(item => item.data.includes(sunStr));
+    const hasSat = fullData.some(item => item.data && item.data.includes(satStr));
+    const hasSun = fullData.some(item => item.data && item.data.includes(sunStr));
 
     if (hasSat || hasSun) {
       return { sat: satStr, sun: sunStr };
@@ -461,9 +560,7 @@ function findNextWeekendRange(currentRange) {
   return { sat: satStr, sun: sunStr };
 }
 
-/* ---------------------------------------------
-   FILTERING
---------------------------------------------- */
+/* FILTERING */
 function filterByDateMode() {
   if (currentDateMode === "all") {
     document.getElementById("currentRangeLabel").textContent = "Cały semestr";
@@ -481,7 +578,7 @@ function filterByDateMode() {
       `Najbliższy zjazd: ${nearest.sat} – ${nearest.sun}`;
 
     return fullData.filter(item =>
-      item.data.includes(nearest.sat) || item.data.includes(nearest.sun)
+      item.data && (item.data.includes(nearest.sat) || item.data.includes(nearest.sun))
     );
   }
 
@@ -492,7 +589,7 @@ function filterByDateMode() {
       `Następny zjazd: ${next.sat} – ${next.sun}`;
 
     return fullData.filter(item =>
-      item.data.includes(next.sat) || item.data.includes(next.sun)
+      item.data && (item.data.includes(next.sat) || item.data.includes(next.sun))
     );
   }
 
@@ -504,6 +601,7 @@ function filterByCustomDates(start, end) {
   const e = new Date(end);
 
   const result = fullData.filter(item => {
+    if (!item.data) return false;
     const d = new Date(item.data.replace(/\./g, "-"));
     return d >= s && d <= e;
   });
@@ -512,13 +610,44 @@ function filterByCustomDates(start, end) {
   return result;
 }
 
-/* ---------------------------------------------
-   RENDERING
---------------------------------------------- */
+function applyGroupFilter(base) {
+  if (currentGroup === "all") return base;
+
+  return base.filter(item => {
+    const group = item.group_code || "";
+    const typ = (item.typ || "").toLowerCase();
+
+    const isMyGroup = group === currentGroup;
+    const isLecture = typ.includes("wyk");
+    const isCommon = !group;
+
+    return isMyGroup || isLecture || isCommon;
+  });
+}
+
+/* GROUP FILTER UI */
+function updateGroupFilter() {
+  const select = document.getElementById("groupSelect");
+  const groups = new Set();
+
+  fullData.forEach(item => {
+    if (item.group_code) groups.add(item.group_code);
+  });
+
+  const sorted = [...groups].sort((a, b) => a.localeCompare(b, "pl"));
+
+  select.innerHTML = `<option value="all">Wszystkie</option>`;
+  sorted.forEach(g => {
+    select.innerHTML += `<option value="${g}">Grupa ${g}</option>`;
+  });
+}
+
+/* RENDERING */
 function updateNoDataMessage() {
   const msg = document.getElementById("noDataMessage");
   if (!filteredData || filteredData.length === 0) {
     msg.style.display = "block";
+    msg.textContent = "Brak zajęć w wybranym zakresie.";
   } else {
     msg.style.display = "none";
   }
@@ -538,6 +667,8 @@ function applyAllFilters() {
   } else {
     base = filterByDateMode();
   }
+
+  base = applyGroupFilter(base);
 
   filteredData = base;
   updateNoDataMessage();
@@ -575,6 +706,7 @@ function renderCards() {
     if (i > 0) {
       const sep = document.createElement("hr");
       sep.style.margin = "10px 0";
+      sep.style.borderColor = "rgba(31,41,55,0.7)";
       container.appendChild(sep);
     }
 
@@ -586,11 +718,19 @@ function renderCards() {
     title.textContent = dateStr;
     dayBlock.appendChild(title);
 
-    items.sort((a, b) => a.od.localeCompare(b.od));
+    items.sort((a, b) => {
+      const t = a.od.localeCompare(b.od);
+      if (t !== 0) return t;
+      return (a.group_code || "").localeCompare(b.group_code || "");
+    });
 
     items.forEach(item => {
       const card = document.createElement("div");
       card.className = "card";
+
+      if (item.group_code) {
+        card.classList.add(`group-${item.group_code}`);
+      }
 
       const uwagiLower = ((item.uwagi || "") + " " + (item.zaliczenie || "")).toLowerCase();
       if (uwagiLower.includes("odwołane")) {
@@ -615,6 +755,7 @@ function renderCards() {
       const meta = document.createElement("div");
       meta.className = "card-meta";
       meta.innerHTML = `
+        <span>Grupa: ${item.group_code || "—"}</span>
         <span>${item.typ || ""}</span>
         <span>${item.sala || ""}</span>
         <span>${item.prowadzacy || ""}</span>
@@ -645,7 +786,9 @@ function renderTable() {
     .sort((a, b) => {
       const d = new Date(a.data.replace(/\./g, "-")) - new Date(b.data.replace(/\./g, "-"));
       if (d !== 0) return d;
-      return a.od.localeCompare(b.od);
+      const t = a.od.localeCompare(b.od);
+      if (t !== 0) return t;
+      return (a.group_code || "").localeCompare(b.group_code || "");
     })
     .map(item => {
       const uwagiParts = [];
@@ -657,6 +800,7 @@ function renderTable() {
         item.data,
         item.od,
         item.do,
+        item.group_code || "",
         item.przedmiot,
         item.typ,
         item.sala,
@@ -672,6 +816,7 @@ function renderTable() {
         { title: "Data" },
         { title: "Od" },
         { title: "Do" },
+        { title: "Grupa" },
         { title: "Zajęcia" },
         { title: "Forma" },
         { title: "Sala" },
@@ -683,7 +828,7 @@ function renderTable() {
         url: "https://cdn.datatables.net/plug-ins/2.1.8/i18n/pl.json"
       },
       createdRow: function (row, data) {
-        const uwagi = (data[7] || "").toLowerCase();
+        const uwagi = (data[8] || "").toLowerCase();
         if (uwagi.includes("odwołane")) {
           row.classList.add("cancelled");
         }
@@ -696,9 +841,7 @@ function renderTable() {
   }
 }
 
-/* ---------------------------------------------
-   INIT
---------------------------------------------- */
+/* INIT */
 async function init() {
   document.getElementById("noDataMessage").textContent = "Ładowanie danych…";
   document.getElementById("noDataMessage").style.display = "block";
@@ -719,15 +862,19 @@ async function init() {
 
   document.getElementById("noDataMessage").style.display = "none";
 
+  updateGroupFilter();
   applyAllFilters();
 }
 
-/* ---------------------------------------------
-   EVENTS
---------------------------------------------- */
+/* EVENTS */
 document.getElementById("specSelect").addEventListener("change", e => {
   currentTok = e.target.value;
   init();
+});
+
+document.getElementById("groupSelect").addEventListener("change", e => {
+  currentGroup = e.target.value;
+  applyAllFilters();
 });
 
 document.querySelectorAll(".date-mode-btn").forEach(btn => {
@@ -736,7 +883,7 @@ document.querySelectorAll(".date-mode-btn").forEach(btn => {
     btn.classList.add("active");
     currentDateMode = btn.dataset.mode;
     document.getElementById("customDates").style.display =
-      currentDateMode === "custom" ? "block" : "none";
+      currentDateMode === "custom" ? "flex" : "none";
     applyAllFilters();
   });
 });
@@ -779,12 +926,11 @@ document.getElementById("reloadBtn").addEventListener("click", async () => {
     "Dane zaktualizowano: " +
     new Date(lastTimestamp * 1000).toLocaleString("pl-PL");
 
+  updateGroupFilter();
   applyAllFilters();
 });
 
-/* ---------------------------------------------
-   MOBILE MENU
---------------------------------------------- */
+/* MOBILE MENU */
 const mobileBtn = document.getElementById("mobileMenuBtn");
 const sidebar = document.querySelector(".sidebar");
 
@@ -811,9 +957,7 @@ document.addEventListener("click", (e) => {
 window.addEventListener("resize", updateMobileMode);
 updateMobileMode();
 
-/* ---------------------------------------------
-   START
---------------------------------------------- */
+/* START */
 init();
 </script>
 
