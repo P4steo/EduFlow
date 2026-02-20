@@ -751,50 +751,12 @@ function findNextWeekendRange(currentRange) {
   return result;
 }
 
-
-
-
-
-
 /* FILTERING */
-if (currentDateMode === "next") {
-    const next = findNextWeekendRange(nearest);
-
-    document.getElementById("currentRangeLabel").textContent =
-      `Następny zjazd: ${next.sat} – ${next.sun}`;
-
-    // Pobieramy zajęcia z soboty i niedzieli
-    const result = fullData.filter(item =>
-      item.data && (item.data.includes(next.sat) || item.data.includes(next.sun))
-    );
-
-    // --- ZAWSZE DODAJEMY SOBOTĘ I NIEDZIELĘ JAKO OSOBNE BLOKI ---
-
-    // Jeśli nie ma soboty → dodaj pusty blok soboty
-    if (!result.some(item => item.data.includes(next.sat))) {
-      result.push({
-        data: `${next.sat} sobota`,
-        przedmiot: "—",
-        grupa: "—",
-        sala: "—",
-        prowadzacy: "—"
-      });
-    }
-
-    // Jeśli nie ma niedzieli → dodaj pusty blok niedzieli
-    if (!result.some(item => item.data.includes(next.sun))) {
-      result.push({
-        data: `${next.sun} niedziela`,
-        przedmiot: "—",
-        grupa: "—",
-        sala: "—",
-        prowadzacy: "—"
-      });
-    }
-
-    return result;
-}
-
+function filterByDateMode() {
+  if (currentDateMode === "all") {
+    document.getElementById("currentRangeLabel").textContent = "Cały semestr";
+    return fullData.slice();
+  }
 
   const nearest = findNearestWeekendRange();
   if (!nearest) {
@@ -1245,6 +1207,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
 
 
