@@ -663,8 +663,12 @@ function findNearestWeekendRange() {
 }
 
 function findNextWeekendRange(currentRange) {
-  // 1. Pobieramy wszystkie unikalne daty zjazdów
-  const uniqueDates = [...new Set(allEvents.map(ev => ev.date))];
+  // 1. Pobieramy wszystkie unikalne daty zjazdów z fullData
+  const uniqueDates = [...new Set(
+    fullData
+      .filter(ev => ev.data)
+      .map(ev => ev.data)
+  )];
 
   // 2. Zamieniamy je na Date i sortujemy
   const sorted = uniqueDates
@@ -1164,6 +1168,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
 
 
