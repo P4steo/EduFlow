@@ -436,83 +436,15 @@
       }
     }
 
-  /* Animacja przejścia */
-body {
-  transition: background-color 0.35s ease, color 0.35s ease;
-}
-
-/* Motyw jasny */
-body.light {
-  background: #ffffff;
-  color: #000000;
-}
-
-/* Motyw ciemny */
-body.dark {
-  background: #121212;
-  color: #ffffff;
-}
-
-/* Kontener przełącznika */
-.theme-toggle {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  cursor: pointer;
-  user-select: none;
-  margin: 20px;
-}
-
-/* Tekst obok przełącznika */
-.theme-toggle span {
-  font-size: 16px;
-}
-
-/* Sam przełącznik */
-.switch {
-  width: 50px;
-  height: 26px;
-  background: #ccc;
-  border-radius: 20px;
-  position: relative;
-  transition: background 0.3s ease;
-}
-
-/* Kółko */
-.switch::after {
-  content: "";
-  width: 22px;
-  height: 22px;
-  background: white;
-  border-radius: 50%;
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  transition: transform 0.3s ease;
-}
-
-/* Aktywny (ciemny) */
-body.dark .switch {
-  background: #4a90e2;
-}
-
-body.dark .switch::after {
-  transform: translateX(24px);
-}
-
-/* Ikony */
-.theme-icon {
-  font-size: 20px;
-}
-
   </style>
 </head>
 <body>
-  <div class="theme-toggle" id="themeToggle">
+<div class="theme-toggle" id="themeToggle">
   <span class="theme-icon" id="themeIcon">🌙</span>
   <div class="switch"></div>
   <span id="themeLabel">Light Mode</span>
 </div>
+
 
 
 <button id="mobileMenuBtn">Filtry</button>
@@ -1119,14 +1051,15 @@ if ("serviceWorker" in navigator) {
   const label = document.getElementById("themeLabel");
 
   // Ustawienie motywu przy starcie
-  const saved = localStorage.getItem("theme");
-  if (saved) {
-    body.classList.add(saved);
-  } else {
-    body.classList.add("light"); // domyślnie jasny
+  let saved = localStorage.getItem("theme");
+
+  if (!saved) {
+    saved = "light"; // domyślnie jasny
+    localStorage.setItem("theme", "light");
   }
 
-  // Aktualizacja ikon i tekstu
+  body.classList.add(saved);
+
   function updateUI() {
     if (body.classList.contains("dark")) {
       icon.textContent = "☀️";
@@ -1139,7 +1072,6 @@ if ("serviceWorker" in navigator) {
 
   updateUI();
 
-  // Kliknięcie przełącznika
   toggle.addEventListener("click", () => {
     body.classList.toggle("light");
     body.classList.toggle("dark");
@@ -1155,6 +1087,7 @@ init();
 </script>
 </body>
 </html>
+
 
 
 
