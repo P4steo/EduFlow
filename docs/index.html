@@ -13,58 +13,6 @@
   <script src="https://cdn.datatables.net/2.1.8/js/dataTables.min.js"></script>
 
   <style>
-    .ios-banner {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%) translateY(120%);
-  width: calc(100% - 40px);
-  max-width: 420px;
-
-  background: rgba(15, 23, 42, 0.55);
-  backdrop-filter: blur(14px) saturate(180%);
-  -webkit-backdrop-filter: blur(14px) saturate(180%);
-
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 18px;
-  padding: 14px 18px;
-
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-
-  color: #e5e7eb;
-  font-size: 14px;
-
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
-  z-index: 9999;
-
-  opacity: 0;
-  transition: transform 0.35s ease, opacity 0.35s ease;
-}
-
-.ios-banner.show {
-  transform: translateX(-50%) translateY(0);
-  opacity: 1;
-}
-
-.ios-banner-btn {
-  padding: 6px 14px;
-  border-radius: 999px;
-  border: 1px solid rgba(56, 189, 248, 0.6);
-  background: rgba(56, 189, 248, 0.15);
-  color: #38bdf8;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease;
-}
-
-.ios-banner-btn:hover {
-  background: rgba(56, 189, 248, 0.25);
-  border-color: #38bdf8;
-}
-
     :root {
       --bg: #0f172a;
       --bg-soft: #111827;
@@ -488,7 +436,58 @@
         display: block;
       }
     }
+  /*<-- BANER STYL -->*/
+    .ios-banner {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(120%);
+      width: calc(100% - 40px);
+      max-width: 420px;
 
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(14px) saturate(180%);
+  -webkit-backdrop-filter: blur(14px) saturate(180%);
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 14px 18px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  color: #e5e7eb;
+  font-size: 14px;
+
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+  z-index: 9999;
+
+  opacity: 0;
+  transition: transform 0.35s ease, opacity 0.35s ease;
+}
+
+.ios-banner.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+.ios-banner-btn {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(56, 189, 248, 0.6);
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.ios-banner-btn:hover {
+  background: rgba(56, 189, 248, 0.25);
+  border-color: #38bdf8;
+}
   </style>
 </head>
 <body>
@@ -567,10 +566,6 @@
       <table id="planTable" style="width:100%;"></table>
     </div>
   </main>
-</div>
-<div id="iosUpdateBanner" class="ios-banner">
-  <span class="ios-banner-text">Nowe dane są dostępne</span>
-  <button id="iosRefreshBtn" class="ios-banner-btn">Odśwież</button>
 </div>
 
 <script>
@@ -1092,31 +1087,49 @@ document.addEventListener("click", (e) => {
 window.addEventListener("resize", updateMobileMode);
 updateMobileMode();
 
-navigator.serviceWorker.addEventListener("message", event => {
-  if (event.data === "new-data-available") {
-    const banner = document.getElementById("iosUpdateBanner");
-    banner.classList.add("show");
-  }
-});
-
-document.getElementById("iosRefreshBtn").addEventListener("click", () => {
-  const banner = document.getElementById("iosUpdateBanner");
-  banner.classList.remove("show");
-
-  loadData();
-});
-
-
+// ===============================
+// BANER – aktualizacja aplikacji (UI)
+// ===============================
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("sw.js");
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("./sw.js")
+      .then(reg => {
+        // wykryto nową wersję SW
+        reg.addEventListener("updatefound", () => {
+          const newWorker = reg.installing;
+          if (!newWorker) return;
+
+          newWorker.addEventListener("statechange", () => {
+            // jeśli jest nowy SW i stary nadal działa → pokaż baner
+            if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+              document.getElementById("iosUpdateBanner").classList.add("show");
+            }
+          });
+        });
+      });
+  });
 }
+
+// kliknięcie w "Odśwież"
+document.getElementById("iosRefreshBtn").addEventListener("click", () => {
+  document.getElementById("iosUpdateBanner").classList.remove("show");
+  window.location.reload();
+});
 
 
 /* START */
 init();
 </script>
+  <!-- BANER iOS – aktualizacja aplikacji -->
+  <div id="iosUpdateBanner" class="ios-banner">
+    <span class="ios-banner-text">Aplikacja została zaktualizowana</span>
+    <button id="iosRefreshBtn" class="ios-banner-btn">Odśwież</button>
+  </div>
+
 </body>
 </html>
+
 
 
 
