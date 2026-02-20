@@ -1,61 +1,92 @@
-const CACHE_NAME = "dsw-cache-v2";
+// ===============================
+// 1. Nazwy cache
+// ===============================
+const STATIC_CACHE = "static-v1";
+const DYNAMIC_CACHE = "dynamic-v1";
+
+// ===============================
+// 2. Pliki do pre-cache (działają offline)
+// ===============================
 const STATIC_ASSETS = [
   "./",
   "./index.html",
+  "./style.css",
   "./manifest.json",
+  "./offline.html",
   "./icons/icon-192.png",
   "./icons/icon-512.png"
 ];
 
-// Instalacja — cache plików statycznych
+// ===============================
+// 3. Instalacja SW → pre-cache
+// ===============================
 self.addEventListener("install", event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_ASSETS))
+    caches.open(STATIC_CACHE).then(cache => {
+      return cache.addAll(STATIC_ASSETS);
+    })
   );
+  self.skipWaiting();
 });
 
-// Aktywacja — czyszczenie starych cache
+// ===============================
+// 4. Aktywacja SW → czyszczenie starych cache
+// ===============================
 self.addEventListener("activate", event => {
   event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
+    caches.keys().then(keys => {
+      return Promise.all(
         keys
-          .filter(key => key !== CACHE_NAME)
+          .filter(key => key !== STATIC_CACHE && key !== DYNAMIC_CACHE)
           .map(key => caches.delete(key))
-      )
-    )
+      );
+    })
   );
+  self.clients.claim();
 });
 
-// Fetch — obsługa offline
+// ===============================
+// 5. Fetch → strategie cache
+// ===============================
 self.addEventListener("fetch", event => {
-  const url = new URL(event.request.url);
+  const request = event.request;
 
-  // 1) API — network first
-  if (url.href.includes("eduflow-qivy.onrender.com/plan")) {
+  // Nie cache'ujemy zapytań do chrome-extension itp.
+  if (request.url.startsWith("chrome-extension")) return;
+
+  // Strategia: Network First dla HTML
+  if (request.headers.get("accept")?.includes("text/html")) {
     event.respondWith(
-      fetch(event.request)
+      fetch(request)
         .then(response => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+          const cloned = response.clone();
+          caches.open(DYNAMIC_CACHE).then(cache => cache.put(request, cloned));
           return response;
         })
-        .catch(() => caches.match(event.request))
+        .catch(() => {
+          return caches.match(request).then(res => res || caches.match("./offline.html"));
+        })
     );
     return;
   }
 
-  // 2) Statyczne pliki — cache first
+  // Strategia: Cache First dla reszty (CSS, JS, IMG)
   event.respondWith(
-    caches.match(event.request).then(cached => {
-      return (
-        cached ||
-        fetch(event.request).then(response => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+    caches.match(request).then(cached => {
+      if (cached) return cached;
+
+      return fetch(request)
+        .then(response => {
+          const cloned = response.clone();
+          caches.open(DYNAMIC_CACHE).then(cache => cache.put(request, cloned));
           return response;
         })
-      );
+        .catch(() => {
+          // fallback dla obrazków
+          if (request.destination === "image") {
+            return caches.match("./icons/icon-192.png");
+          }
+        });
     })
   );
 });
