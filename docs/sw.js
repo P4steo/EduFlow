@@ -141,6 +141,13 @@ async function handleApiRequest(request) {
     const cached = await cache.match(request);
     if (cached) return cached;
 
+    self.clients.matchAll().then(clients => {
+  clients.forEach(client => client.postMessage("new-data-available"));
+});
+
+
     return new Response("{}", { status: 200 });
   }
+  
 }
+
