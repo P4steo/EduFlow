@@ -120,7 +120,6 @@
       box-shadow: 0 0 12px rgba(56, 189, 248, 0.8);
     }
 
-    /* RESZTA TWOJEGO CSS — BEZ ZMIAN */
     .filter-section {
       background: rgba(15, 23, 42, 0.9);
       border-radius: 10px;
@@ -439,13 +438,6 @@
   </style>
 </head>
 <body>
-<div class="theme-toggle" id="themeToggle">
-  <span class="theme-icon" id="themeIcon">🌙</span>
-  <div class="switch"></div>
-  <span id="themeLabel">Light Mode</span>
-</div>
-
-
 
 <button id="mobileMenuBtn">Filtry</button>
 
@@ -1044,42 +1036,6 @@ updateMobileMode();
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("sw.js");
 }
-
-  const body = document.body;
-  const toggle = document.getElementById("themeToggle");
-  const icon = document.getElementById("themeIcon");
-  const label = document.getElementById("themeLabel");
-
-  // Ustawienie motywu przy starcie
-  let saved = localStorage.getItem("theme");
-
-  if (!saved) {
-    saved = "light"; // domyślnie jasny
-    localStorage.setItem("theme", "light");
-  }
-
-  body.classList.add(saved);
-
-  function updateUI() {
-    if (body.classList.contains("dark")) {
-      icon.textContent = "☀️";
-      label.textContent = "Dark Mode";
-    } else {
-      icon.textContent = "🌙";
-      label.textContent = "Light Mode";
-    }
-  }
-
-  updateUI();
-
-  toggle.addEventListener("click", () => {
-    body.classList.toggle("light");
-    body.classList.toggle("dark");
-
-    const current = body.classList.contains("dark") ? "dark" : "light";
-    localStorage.setItem("theme", current);
-
-    updateUI();
   });
 
 /* START */
@@ -1087,6 +1043,7 @@ init();
 </script>
 </body>
 </html>
+
 
 
 
