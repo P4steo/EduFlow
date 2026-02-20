@@ -135,19 +135,18 @@ async function handleApiRequest(request) {
       new Response(JSON.stringify({ timestamp: Date.now() }))
     );
 
+    // POWIADOM STRONĘ O NOWYCH DANYCH
+    self.clients.matchAll().then(clients => {
+      clients.forEach(client => client.postMessage("new-data-available"));
+    });
+
     return networkResponse;
+
   } catch (err) {
     // Offline → fallback do cache
     const cached = await cache.match(request);
     if (cached) return cached;
 
-    self.clients.matchAll().then(clients => {
-  clients.forEach(client => client.postMessage("new-data-available"));
-});
-
-
     return new Response("{}", { status: 200 });
   }
-  
 }
-
