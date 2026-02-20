@@ -614,7 +614,7 @@ async function fetchPlanWithRetry(retries = 5, delay = 1500) {
       const res = await fetch(`${API_URL}?tok=${currentTok}`);
       const json = await res.json();
 
-      if (json && json.data && Array.isArray(json.data) && json.data.length > 0) {
+      if (json && json.data && Array.isArray(json.data)) {
         lastTimestamp = json.timestamp;
         return json.data;
       }
@@ -1208,6 +1208,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
 
 
