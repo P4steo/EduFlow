@@ -665,38 +665,35 @@ function findNearestWeekendRange() {
 function findNextWeekendRange(currentRange) {
   console.group("findNextWeekendRange() START");
 
-  // LOG 1 — sprawdzamy currentRange
-  console.log("currentRange:", currentRange);
-
-  // LOG 2 — sprawdzamy fullData
-  console.log("fullData length:", fullData.length);
-
-  // LOG 3 — sprawdzamy wszystkie daty
+  // 1. Pobieramy wszystkie daty i obcinamy dzień tygodnia
   const rawDates = fullData.map(ev => ev.data);
   console.log("rawDates:", rawDates);
 
-  // FILTRUJEMY TYLKO POPRAWNE FORMATY
-  const uniqueDates = [...new Set(
-    rawDates.filter(str => {
-      const ok = typeof str === "string" && /^\d{4}\.\d{2}\.\d{2}$/.test(str);
-      if (!ok) console.warn("❌ Invalid date format skipped:", str);
-      return ok;
+  const cleanedDates = rawDates
+    .map(str => {
+      if (typeof str !== "string") return null;
+      return str.split(" ")[0]; // bierzemy tylko YYYY.MM.DD
     })
+    .filter(Boolean);
+
+  console.log("cleanedDates:", cleanedDates);
+
+  // 2. Filtrujemy poprawny format
+  const uniqueDates = [...new Set(
+    cleanedDates.filter(str => /^\d{4}\.\d{2}\.\d{2}$/.test(str))
   )];
 
   console.log("uniqueDates:", uniqueDates);
 
-  // ZAMIANA NA DATE — TU MOŻE POWSTAĆ INVALID DATE
+  // 3. Zamieniamy na Date
   const sorted = uniqueDates
     .map(str => {
       const [yy, mm, dd] = str.split(".").map(Number);
       const dt = new Date(yy, mm - 1, dd);
-
       if (isNaN(dt.getTime())) {
-        console.error("❌ Invalid Date object:", str, "→", dt);
+        console.error("❌ Invalid Date:", str);
         return null;
       }
-
       return dt;
     })
     .filter(Boolean)
@@ -710,7 +707,7 @@ function findNextWeekendRange(currentRange) {
     return null;
   }
 
-  // JEŚLI currentRange JEST ZŁY
+  // 4. Jeśli currentRange jest niepoprawny → pierwszy weekend
   if (!currentRange || !currentRange.sat || !currentRange.sun) {
     console.warn("⚠ currentRange invalid — using FIRST weekend");
 
@@ -728,13 +725,11 @@ function findNextWeekendRange(currentRange) {
     return result;
   }
 
-  // LOG — sprawdzamy currentRange.sun
-  console.log("currentRange.sun:", currentRange.sun);
-
+  // 5. Normalne działanie
   const [y, m, d] = currentRange.sun.split(".").map(Number);
   const currentSun = new Date(y, m - 1, d);
 
-  console.log("currentSun Date object:", currentSun);
+  console.log("currentSun:", currentSun);
 
   let nextDate = sorted.find(dt => dt > currentSun);
 
@@ -755,6 +750,7 @@ function findNextWeekendRange(currentRange) {
   console.groupEnd();
   return result;
 }
+
 
 
 
@@ -1216,6 +1212,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
 
 
