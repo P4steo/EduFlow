@@ -1127,7 +1127,7 @@ document.getElementById("reloadBtn").addEventListener("click", async () => {
     return;
   }
 
-  fullData = data;
+  fullData = data || [];
 
   document.getElementById("statusBox").textContent =
     "Dane zaktualizowano: " +
@@ -1208,6 +1208,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
 
 
