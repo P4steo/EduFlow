@@ -679,8 +679,10 @@ function findNextWeekendRange(currentRange) {
     .sort((a, b) => a - b);
 
   // 4. Szukamy pierwszej daty > currentSat
-  const nextDate = sorted.find(dt => dt > currentSat);
-  if (!nextDate) return null; // brak kolejnych zjazdów
+  let nextDate = sorted.find(dt => dt > currentSat);
+
+  // Jeśli nie ma kolejnego zjazdu → zwracamy ostatni (żeby przycisk nie umierał)
+  if (!nextDate) nextDate = sorted[sorted.length - 1];
 
   // 5. Tworzymy niedzielę = sobota + 1 dzień
   const nextSun = new Date(nextDate);
@@ -692,6 +694,7 @@ function findNextWeekendRange(currentRange) {
 
   return { sat: satStr, sun: sunStr };
 }
+
 
 
 /* FILTERING */
@@ -1150,6 +1153,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
 
 
