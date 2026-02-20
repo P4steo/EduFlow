@@ -1098,13 +1098,11 @@ if ("serviceWorker" in navigator) {
     navigator.serviceWorker
       .register("./sw.js")
       .then(reg => {
-        // wykryto nową wersję SW
         reg.addEventListener("updatefound", () => {
           const newWorker = reg.installing;
           if (!newWorker) return;
 
           newWorker.addEventListener("statechange", () => {
-            // jeśli jest nowy SW i stary nadal działa → pokaż baner
             if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
               document.getElementById("iosUpdateBanner").classList.add("show");
             }
@@ -1114,11 +1112,14 @@ if ("serviceWorker" in navigator) {
   });
 }
 
-// kliknięcie w "Odśwież"
-document.getElementById("iosRefreshBtn").addEventListener("click", () => {
-  document.getElementById("iosUpdateBanner").classList.remove("show");
-  window.location.reload();
+// kliknięcie w "Odśwież" — musi poczekać aż DOM się załaduje
+window.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("iosRefreshBtn").addEventListener("click", () => {
+    document.getElementById("iosUpdateBanner").classList.remove("show");
+    window.location.reload();
+  });
 });
+
 
 </script>
   <!-- BANER iOS – aktualizacja aplikacji -->
@@ -1129,6 +1130,7 @@ document.getElementById("iosRefreshBtn").addEventListener("click", () => {
 
 </body>
 </html>
+
 
 
 
