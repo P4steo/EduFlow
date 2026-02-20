@@ -1,8 +1,8 @@
 // ===============================
 // 1. Nazwy cache
 // ===============================
-const STATIC_CACHE = "static-v1";
-const DYNAMIC_CACHE = "dynamic-v1";
+const STATIC_CACHE = "static-v2";
+const DYNAMIC_CACHE = "dynamic-v2";
 
 // ===============================
 // 2. Pliki statyczne (offline)
@@ -17,12 +17,7 @@ const STATIC_ASSETS = [
 ];
 
 // ===============================
-// 3. TTL dla danych (5 minut)
-// ===============================
-const TTL = 5 * 60 * 1000; // 5 min
-
-// ===============================
-// 4. Instalacja SW
+// 3. Instalacja SW
 // ===============================
 self.addEventListener("install", event => {
   event.waitUntil(
@@ -32,7 +27,7 @@ self.addEventListener("install", event => {
 });
 
 // ===============================
-// 5. Aktywacja SW
+// 4. Aktywacja SW
 // ===============================
 self.addEventListener("activate", event => {
   event.waitUntil(
@@ -48,25 +43,14 @@ self.addEventListener("activate", event => {
 });
 
 // ===============================
-// 6. Fetch handler
+// 5. Fetch handler
 // ===============================
 self.addEventListener("fetch", event => {
   const request = event.request;
 
-  // Ignorujemy chrome-extension
   if (request.url.startsWith("chrome-extension")) return;
 
-  // ===============================
-  // A. API: data.json → Network-first + TTL
-  // ===============================
-  if (request.url.includes("data.json")) {
-    event.respondWith(handleApiRequest(request));
-    return;
-  }
-
-  // ===============================
-  // B. HTML → Network-first
-  // ===============================
+  // HTML → network-first
   if (request.headers.get("accept")?.includes("text/html")) {
     event.respondWith(
       fetch(request)
@@ -82,9 +66,7 @@ self.addEventListener("fetch", event => {
     return;
   }
 
-  // ===============================
-  // C. Assety → Cache-first
-  // ===============================
+  // Assety → cache-first
   event.respondWith(
     caches.match(request).then(cached => {
       if (cached) return cached;
@@ -103,50 +85,3 @@ self.addEventListener("fetch", event => {
     })
   );
 });
-
-// ===============================
-// 7. Funkcja obsługi API z TTL
-// ===============================
-async function handleApiRequest(request) {
-  const cache = await caches.open(DYNAMIC_CACHE);
-
-  // Odczytaj metadane (timestamp)
-  const meta = await cache.match(request.url + ":meta");
-
-  if (meta) {
-    const { timestamp } = await meta.json();
-    const age = Date.now() - timestamp;
-
-    // Jeśli dane są świeże → użyj cache
-    if (age < TTL) {
-      const cached = await cache.match(request);
-      if (cached) return cached;
-    }
-  }
-
-  // Network-first
-  try {
-    const networkResponse = await fetch(request);
-
-    // Zapisz dane
-    cache.put(request, networkResponse.clone());
-    cache.put(
-      request.url + ":meta",
-      new Response(JSON.stringify({ timestamp: Date.now() }))
-    );
-
-    // POWIADOM STRONĘ O NOWYCH DANYCH
-    self.clients.matchAll().then(clients => {
-      clients.forEach(client => client.postMessage("new-data-available"));
-    });
-
-    return networkResponse;
-
-  } catch (err) {
-    // Offline → fallback do cache
-    const cached = await cache.match(request);
-    if (cached) return cached;
-
-    return new Response("{}", { status: 200 });
-  }
-}
