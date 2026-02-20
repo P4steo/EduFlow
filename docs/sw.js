@@ -10,7 +10,6 @@ const DYNAMIC_CACHE = "dynamic-v1";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
-  "./style.css",
   "./manifest.json",
   "./offline.html",
   "./icons/icon-192.png",
@@ -90,3 +89,4 @@ self.addEventListener("fetch", event => {
     })
   );
 });
+
