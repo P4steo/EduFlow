@@ -663,12 +663,19 @@ function findNearestWeekendRange() {
 }
 
 function findNextWeekendRange(currentRange) {
-  console.group("findNextWeekendRange");
+  console.group("findNextWeekendRange() START");
 
-  // 1. Pobieramy wszystkie poprawne daty zjazdów z fullData
+  // LOG 1 — sprawdzamy currentRange
+  console.log("currentRange:", currentRange);
+
+  // LOG 2 — sprawdzamy fullData
+  console.log("fullData length:", fullData.length);
+
+  // LOG 3 — sprawdzamy wszystkie daty
   const rawDates = fullData.map(ev => ev.data);
-  console.log("Raw dates from fullData:", rawDates);
+  console.log("rawDates:", rawDates);
 
+  // FILTRUJEMY TYLKO POPRAWNE FORMATY
   const uniqueDates = [...new Set(
     rawDates.filter(str => {
       const ok = typeof str === "string" && /^\d{4}\.\d{2}\.\d{2}$/.test(str);
@@ -677,9 +684,9 @@ function findNextWeekendRange(currentRange) {
     })
   )];
 
-  console.log("Unique valid dates:", uniqueDates);
+  console.log("uniqueDates:", uniqueDates);
 
-  // 2. Zamieniamy je na Date i odfiltrowujemy błędne
+  // ZAMIANA NA DATE — TU MOŻE POWSTAĆ INVALID DATE
   const sorted = uniqueDates
     .map(str => {
       const [yy, mm, dd] = str.split(".").map(Number);
@@ -695,17 +702,17 @@ function findNextWeekendRange(currentRange) {
     .filter(Boolean)
     .sort((a, b) => a - b);
 
-  console.log("Sorted valid Date objects:", sorted);
+  console.log("sorted dates:", sorted);
 
   if (sorted.length === 0) {
-    console.error("❌ No valid dates available — returning null");
+    console.error("❌ No valid dates — cannot continue");
     console.groupEnd();
     return null;
   }
 
-  // 3. Jeśli currentRange jest niepoprawny → bierzemy pierwszy weekend
+  // JEŚLI currentRange JEST ZŁY
   if (!currentRange || !currentRange.sat || !currentRange.sun) {
-    console.warn("⚠ currentRange invalid, using FIRST weekend");
+    console.warn("⚠ currentRange invalid — using FIRST weekend");
 
     const first = sorted[0];
     const firstSun = new Date(first);
@@ -716,26 +723,26 @@ function findNextWeekendRange(currentRange) {
       sun: firstSun.toISOString().split("T")[0].replace(/-/g, ".")
     };
 
-    console.log("Returning:", result);
+    console.log("Returning FIRST weekend:", result);
     console.groupEnd();
     return result;
   }
 
-  // 4. Zamieniamy aktualną niedzielę na Date
+  // LOG — sprawdzamy currentRange.sun
+  console.log("currentRange.sun:", currentRange.sun);
+
   const [y, m, d] = currentRange.sun.split(".").map(Number);
   const currentSun = new Date(y, m - 1, d);
 
-  console.log("Current weekend end (sun):", currentRange.sun, "→", currentSun);
+  console.log("currentSun Date object:", currentSun);
 
-  // 5. Szukamy pierwszej daty > currentSun
   let nextDate = sorted.find(dt => dt > currentSun);
 
   if (!nextDate) {
-    console.warn("⚠ No next weekend found — using LAST weekend");
+    console.warn("⚠ No next weekend — using LAST weekend");
     nextDate = sorted[sorted.length - 1];
   }
 
-  // 6. Tworzymy niedzielę = sobota + 1 dzień
   const nextSun = new Date(nextDate);
   nextSun.setDate(nextDate.getDate() + 1);
 
@@ -744,10 +751,11 @@ function findNextWeekendRange(currentRange) {
     sun: nextSun.toISOString().split("T")[0].replace(/-/g, ".")
   };
 
-  console.log("Returning:", result);
+  console.log("Returning NEXT weekend:", result);
   console.groupEnd();
   return result;
 }
+
 
 
 
@@ -1208,6 +1216,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
 
 
