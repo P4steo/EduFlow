@@ -1124,6 +1124,11 @@ document.getElementById("reloadBtn").addEventListener("click", async () => {
     document.getElementById("noDataMessage").textContent =
       "Brak danych z serwera. Spróbuj ponownie.";
     setDotError();
+
+    fullData = [];
+    updateGroupFilter();
+    applyAllFilters();
+  
     return;
   }
 
@@ -1208,6 +1213,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
 
 
