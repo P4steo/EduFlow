@@ -663,14 +663,10 @@ function findNearestWeekendRange() {
 }
 
 function findNextWeekendRange(currentRange) {
-  // 1. Zamieniamy aktualną sobotę na Date
-  const [y, m, d] = currentRange.sat.split(".").map(Number);
-  const currentSat = new Date(y, m - 1, d);
-
-  // 2. Wyciągamy wszystkie unikalne daty zjazdów z allEvents
+  // 1. Pobieramy wszystkie unikalne daty zjazdów
   const uniqueDates = [...new Set(allEvents.map(ev => ev.date))];
 
-  // 3. Zamieniamy je na Date i sortujemy
+  // 2. Zamieniamy je na Date i sortujemy
   const sorted = uniqueDates
     .map(str => {
       const [yy, mm, dd] = str.split(".").map(Number);
@@ -678,21 +674,36 @@ function findNextWeekendRange(currentRange) {
     })
     .sort((a, b) => a - b);
 
-  // 4. Szukamy pierwszej daty > currentSat
-  let nextDate = sorted.find(dt => dt > currentSat);
+  // 3. Jeśli currentRange jest niepoprawny → bierzemy pierwszy weekend
+  if (!currentRange || !currentRange.sat || !currentRange.sun) {
+    const first = sorted[0];
+    const firstSun = new Date(first);
+    firstSun.setDate(first.getDate() + 1);
 
-  // Jeśli nie ma kolejnego zjazdu → zwracamy ostatni (żeby przycisk nie umierał)
+    return {
+      sat: first.toISOString().split("T")[0].replace(/-/g, "."),
+      sun: firstSun.toISOString().split("T")[0].replace(/-/g, ".")
+    };
+  }
+
+  // 4. Zamieniamy aktualną niedzielę na Date
+  const [y, m, d] = currentRange.sun.split(".").map(Number);
+  const currentSun = new Date(y, m - 1, d);
+
+  // 5. Szukamy pierwszej daty > currentSun
+  let nextDate = sorted.find(dt => dt > currentSun);
+
+  // 6. Jeśli nie ma kolejnego → zwracamy ostatni weekend
   if (!nextDate) nextDate = sorted[sorted.length - 1];
 
-  // 5. Tworzymy niedzielę = sobota + 1 dzień
+  // 7. Tworzymy niedzielę = sobota + 1 dzień
   const nextSun = new Date(nextDate);
   nextSun.setDate(nextDate.getDate() + 1);
 
-  // 6. Formatowanie YYYY.MM.DD
-  const satStr = nextDate.toISOString().split("T")[0].replace(/-/g, ".");
-  const sunStr = nextSun.toISOString().split("T")[0].replace(/-/g, ".");
-
-  return { sat: satStr, sun: sunStr };
+  return {
+    sat: nextDate.toISOString().split("T")[0].replace(/-/g, "."),
+    sun: nextSun.toISOString().split("T")[0].replace(/-/g, ".")
+  };
 }
 
 
@@ -1153,6 +1164,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
 
 
