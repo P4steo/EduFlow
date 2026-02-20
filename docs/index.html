@@ -663,16 +663,36 @@ function findNearestWeekendRange() {
 }
 
 function findNextWeekendRange(currentRange) {
+  // 1. Zamieniamy aktualną sobotę na Date
   const [y, m, d] = currentRange.sat.split(".").map(Number);
-  const nextSat = new Date(y, m - 1, d + 7);
-  const nextSun = new Date(nextSat);
-  nextSun.setDate(nextSat.getDate() + 1);
+  const currentSat = new Date(y, m - 1, d);
 
-  const satStr = nextSat.toISOString().split("T")[0].replace(/-/g, ".");
+  // 2. Wyciągamy wszystkie unikalne daty zjazdów z allEvents
+  const uniqueDates = [...new Set(allEvents.map(ev => ev.date))];
+
+  // 3. Zamieniamy je na Date i sortujemy
+  const sorted = uniqueDates
+    .map(str => {
+      const [yy, mm, dd] = str.split(".").map(Number);
+      return new Date(yy, mm - 1, dd);
+    })
+    .sort((a, b) => a - b);
+
+  // 4. Szukamy pierwszej daty > currentSat
+  const nextDate = sorted.find(dt => dt > currentSat);
+  if (!nextDate) return null; // brak kolejnych zjazdów
+
+  // 5. Tworzymy niedzielę = sobota + 1 dzień
+  const nextSun = new Date(nextDate);
+  nextSun.setDate(nextDate.getDate() + 1);
+
+  // 6. Formatowanie YYYY.MM.DD
+  const satStr = nextDate.toISOString().split("T")[0].replace(/-/g, ".");
   const sunStr = nextSun.toISOString().split("T")[0].replace(/-/g, ".");
 
   return { sat: satStr, sun: sunStr };
 }
+
 
 /* FILTERING */
 function filterByDateMode() {
@@ -1130,6 +1150,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
 
 
