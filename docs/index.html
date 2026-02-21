@@ -409,7 +409,21 @@
       color: var(--text-soft);
       font-size: 12px;
       cursor: pointer;
+      transition: all 0.25s ease;
     }
+
+/* Po kliknięciu: małe kółko */
+#mobileMenuBtn.circle {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 50%;
+  left: 10px; /* trzyma się lewej */
+  font-size: 0; /* ukrywa tekst */
+  opacity: 0.9;
+  transform: scale(0.9);
+}
+
 
     @media (max-width: 768px) {
       .app {
@@ -493,7 +507,7 @@
 </head>
 <body>
 
-<button id="mobileMenuBtn" style="display: block;">Filtry</button>
+<button id="mobileMenuBtn">Filtry</button>
 
 <div class="app">
   <aside class="sidebar">
@@ -1145,6 +1159,10 @@ document.getElementById("reloadBtn").addEventListener("click", async () => {
 
 /* MOBILE MENU */
 const mobileBtn = document.getElementById("mobileMenuBtn");
+mobileBtn.addEventListener("click", () => {
+  mobileBtn.classList.toggle("circle");
+});
+
 const sidebar = document.querySelector(".sidebar");
 
 function updateMobileMode() {
@@ -1213,6 +1231,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
 
 
