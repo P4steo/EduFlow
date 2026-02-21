@@ -397,10 +397,10 @@
     }
 
     #mobileMenuBtn {
-      display: block;
+      display: none;
       position: fixed;
       top: 10px;
-      left: 10px;
+      left: auto;
       z-index: 20;
       padding: 6px 10px;
       border-radius: 999px;
@@ -1149,7 +1149,7 @@ const sidebar = document.querySelector(".sidebar");
 
 function updateMobileMode() {
   if (window.innerWidth <= 768) {
-    mobileBtn.style.display = "none";
+    mobileBtn.style.display = "flex";
   } else {
     mobileBtn.style.display = "none";
     sidebar.classList.remove("open");
@@ -1213,6 +1213,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
 
 
