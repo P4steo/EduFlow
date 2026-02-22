@@ -1105,7 +1105,7 @@ async function init() {
   document.getElementById("noDataMessage").textContent = "Ładowanie danych…";
   document.getElementById("noDataMessage").style.display = "block";
 
-  const data = await LoadData();
+  const data = await loadData();
 
   if (!data) {
     document.getElementById("noDataMessage").textContent =
@@ -1273,6 +1273,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
 
 
