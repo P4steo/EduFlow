@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/P4steo/EduFlow/compare/v1.0.1...v1.1.0) (2026-02-22)
+
+
+### Features
+
+* **data:** implement localStorage cache, offline mode and retry-based API loading ([71b2d6b](https://github.com/P4steo/EduFlow/commit/71b2d6b576c4eecb0f012507db60c2c6e4cd2d0e))
+
 ## [1.0.1](https://github.com/P4steo/EduFlow/compare/v1.0.0...v1.0.1) (2026-02-22)
 
 
