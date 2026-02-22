@@ -644,6 +644,42 @@ async function fetchPlanWithRetry(retries = 5, delay = 1500) {
   }
   return null;
 }
+async function loadData() {
+  const cacheKey = "cachedPlan";
+  const cacheTimeKey = "cachedPlanTimestamp";
+  const maxAge = 1000 * 60 * 60 * 6; // 6 godzin
+
+  const cached = localStorage.getItem(cacheKey);
+  const cachedTime = localStorage.getItem(cacheTimeKey);
+
+  // 1. Brak internetu → użyj cache → fallback do data.json
+  if (!navigator.onLine) {
+    if (cached) return JSON.parse(cached);
+    const local = await fetch("data.json");
+    return await local.json();
+  }
+
+  // 2. Cache świeży → użyj cache
+  if (cached && cachedTime && Date.now() - cachedTime < maxAge) {
+    return JSON.parse(cached);
+  }
+
+  // 3. Spróbuj pobrać z API (z retry)
+  const apiData = await fetchPlanWithRetry();
+
+  if (apiData) {
+    localStorage.setItem(cacheKey, JSON.stringify(apiData));
+    localStorage.setItem(cacheTimeKey, Date.now());
+    return apiData;
+  }
+
+  // 4. API padło → fallback do cache → fallback do data.json
+  if (cached) return JSON.parse(cached);
+
+  const local = await fetch("data.json");
+  return await local.json();
+}
+
 /* WEEKEND HELPERS */
 function nextWeekendDate(fromDate = new Date()) {
   const d = new Date(fromDate);
@@ -1069,7 +1105,7 @@ async function init() {
   document.getElementById("noDataMessage").textContent = "Ładowanie danych…";
   document.getElementById("noDataMessage").style.display = "block";
 
-  const data = await fetchPlanWithRetry();
+  const data = await LoadData();
 
   if (!data) {
     document.getElementById("noDataMessage").textContent =
@@ -1237,6 +1273,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
 
 
