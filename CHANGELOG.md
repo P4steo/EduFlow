@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/P4steo/EduFlow/compare/v1.1.0...v1.1.1) (2026-02-22)
+
+
+### Bug Fixes
+
+* minor fix ([4839d12](https://github.com/P4steo/EduFlow/commit/4839d12358f3ce5ff33ae3b071c6e9baef41b0b2))
+
 # [1.1.0](https://github.com/P4steo/EduFlow/compare/v1.0.1...v1.1.0) (2026-02-22)
 
 
