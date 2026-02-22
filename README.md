@@ -1,57 +1,49 @@
-# **EduFlow – Interaktywny harmonogram zjazdów DSW** 
+# 🚀 EduFlow – Twój inteligentny harmonogram zjazdów DSW
+
+EduFlow automatycznie pobiera i analizuje plan zjazdów DSW, a następnie prezentuje go w przejrzystej formie.  
+Zero PDF-ów, zero chaosu — tylko szybki dostęp do tego, co najważniejsze.
 
 ---
 
-## 🔰 Badges
+## 🔗 Linki
 
-![Status](https://img.shields.io/badge/status-active-brightgreen)
-![Frontend](https://img.shields.io/badge/frontend-HTML%2FCSS%2FJS-blue)
-![Backend](https://img.shields.io/badge/backend-FastAPI-green)
-![License](https://img.shields.io/badge/license-MIT-yellow)
-![Responsive](https://img.shields.io/badge/mobile-friendly-orange)
-![Data](https://img.shields.io/badge/data-auto--updated-lightgrey)
+👉 **Aplikacja online:** https://p4steo.github.io/EduFlow/  
+👉 **API:** https://eduflow-qivy.onrender.com/plan  
 
 ---
 
+## ⭐ Najważniejsze funkcje
 
-## 🎓 EduFlow – Interaktywny harmonogram zjazdów DSW
-
-EduFlow to responsywna aplikacja webowa, która pobiera i prezentuje plan zjazdów dla studentów DSW w czytelnej formie kart lub tabeli.  
-Projekt automatycznie analizuje dane z oficjalnego harmonogramu i grupuje je według dni oraz grup.
-
-🔗 **Live demo:** https://p4steo.github.io/EduFlow/ 
-🔗 **API backend:** https://eduflow-qivy.onrender.com/plan
-
----
-
-## ✨ Funkcje
-
-- 📅 Automatyczne wykrywanie **najbliższego zjazdu** (sobota + niedziela)
-- 🔁 **Następny zjazd** obliczany jako +7 dni
-- 🗂 Filtrowanie po grupach (Ćw1N, Ćw2N, WykN itd.)
-- 🗓 Zakresy dat: cały semestr, najbliższy, następny, własny
-- 🧭 Dwa widoki: **karty** oraz **tabela**
-- 🔄 Przycisk **„Załaduj ponownie dane”**
-- ⚠️ Oznaczanie zajęć odwołanych
-- 📱 Pełna responsywność + mobilne menu (hamburger)
-- 🕒 Status ostatniej aktualizacji danych
-- 🧹 Grupowanie zajęć według dni
+- 📅 Automatyczne wykrywanie najbliższego zjazdu  
+- 🔁 Obliczanie następnego zjazdu  
+- 🗂 Filtrowanie po grupach  
+- 🧭 Widok kart i widok tabeli  
+- 📱 Pełna responsywność  
+- ⚠️ Oznaczanie zajęć odwołanych  
+- 🔄 Ręczne odświeżanie danych  
+- 🕒 Informacja o ostatniej aktualizacji  
 
 ---
 
-## 🛠 Technologie
+## 🧰 Technologie
 
-### Frontend
-- HTML5  
-- CSS3 (w tym mobile mode)  
-- JavaScript (ES6+)  
-- DataTables  
+**Frontend:** HTML, CSS, JS, DataTables  
+**Backend:** FastAPI, Python, BeautifulSoup4, Requests  
 
-### Backend
-- Python  
-- FastAPI  
-- BeautifulSoup4  
-- Requests  
-- Cache z TTL + fallback  
+---
 
+## 🧱 Architektura
 
+Frontend pobiera dane z API, które parsuje oficjalny harmonogram uczelni i zwraca go w formacie JSON.  
+Dane są cache’owane, aby przyspieszyć działanie i odciążyć źródło.
+
+---
+
+## 📜 Changelog
+Pełna historia zmian znajduje się tutaj: [CHANGELOG.md](CHANGELOG.md)
+
+---
+
+## 📜 Licencja
+
+MIT
