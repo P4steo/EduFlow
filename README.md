@@ -46,4 +46,4 @@ Pełna historia zmian znajduje się tutaj: [CHANGELOG.md](CHANGELOG.md)
 
 ## 📜 Licencja
 
-MIT
+BSD
