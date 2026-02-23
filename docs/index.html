@@ -644,47 +644,53 @@ async function fetchPlanWithRetry(retries = 5, delay = 1500) {
   }
   return null;
 }
-  /* Offline */
-  async function loadData() {
-    const cacheKey = "cachedPlan";
-    const cacheTimeKey = "cachedPlanTimestamp";
-    const maxAge = 1000 * 60 * 60 * 6;
-  
-    const cached = localStorage.getItem(cacheKey);
-    const cachedTime = localStorage.getItem(cacheTimeKey);
-  
-    if (!navigator.onLine) {
-      if (cached) {
-        lastTimestamp = cachedTime / 1000;
-        return JSON.parse(cached);
-      }
-      const local = await fetch("data.json");
-      return await local.json();
-    }
-  
-    if (cached && cachedTime && Date.now() - cachedTime < maxAge) {
-      lastTimestamp = cachedTime / 1000;
-      return JSON.parse(cached);
-    }
-  
-    const apiData = await fetchPlanWithRetry();
-  
-    if (apiData) {
-      const now = Date.now();
-      localStorage.setItem(cacheKey, JSON.stringify(apiData));
-      localStorage.setItem(cacheTimeKey, now);
-      lastTimestamp = now / 1000;
-      return apiData;
-    }
-  
+ /* Offline */
+async function loadData() {
+  const cacheKey = "cachedPlan";
+  const cacheTimeKey = "cachedPlanTimestamp";
+  const maxAge = 1000 * 60 * 60 * 6;
+
+  const cached = localStorage.getItem(cacheKey);
+  const cachedTime = localStorage.getItem(cacheTimeKey);
+
+  // OFFLINE → użyj cache lub data.json
+  if (!navigator.onLine) {
     if (cached) {
       lastTimestamp = cachedTime / 1000;
       return JSON.parse(cached);
     }
-  
     const local = await fetch("data.json");
     return await local.json();
   }
+
+  // CACHE WAŻNY
+  if (cached && cachedTime && Date.now() - cachedTime < maxAge) {
+    lastTimestamp = cachedTime / 1000;
+    return JSON.parse(cached);
+  }
+
+  // API
+  const apiData = await fetchPlanWithRetry();
+
+  if (apiData) {
+    const now = Date.now();
+    localStorage.setItem(cacheKey, JSON.stringify(apiData));
+    localStorage.setItem(cacheTimeKey, now);
+    lastTimestamp = now / 1000;
+    return apiData;
+  }
+
+  // API padło → użyj cache
+  if (cached) {
+    lastTimestamp = cachedTime / 1000;
+    return JSON.parse(cached);
+  }
+
+  // Ostateczny fallback
+  const local = await fetch("data.json");
+  return await local.json();
+}
+
 
 
 
@@ -1297,6 +1303,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
 
 
