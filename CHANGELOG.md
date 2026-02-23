@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/P4steo/EduFlow/compare/v1.5.0...v1.6.0) (2026-02-23)
+
+
+### Features
+
+* border different color to current lesson ([83af48e](https://github.com/P4steo/EduFlow/commit/83af48e53f44591ca2cd10bf53c91e4768a4a3da))
+
 # [1.5.0](https://github.com/P4steo/EduFlow/compare/v1.4.2...v1.5.0) (2026-02-23)
 
 
