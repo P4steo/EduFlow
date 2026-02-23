@@ -1,12 +1,16 @@
 const CACHE_NAME = "static-v2";
 
 const STATIC_ASSETS = [
-  "./",
-  "./index.html",
-  "./manifest.json",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png"
+  "/",
+  "/index.html",
+  "/style.css",
+  "/script.js",
+  "/manifest.json",
+  "/icons/icon-192.png",
+  "/icons/icon-512.png",
+  "/data.json"
 ];
+
 
 self.addEventListener("install", event => {
   event.waitUntil(
@@ -38,5 +42,6 @@ self.addEventListener("fetch", event => {
     })
   );
 });
+
 
 
