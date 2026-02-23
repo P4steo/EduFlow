@@ -579,6 +579,13 @@ document.getElementById("viewCards").addEventListener("click", () => {
   document.getElementById("viewTable").classList.remove("active");
   render();
 });
+document.getElementById("viewTable").addEventListener("click", () => {
+  currentView = "table";
+  document.getElementById("viewTable").classList.add("active");
+  document.getElementById("viewCards").classList.remove("active");
+  render();
+});
+
 
 document.getElementById("reloadBtn").addEventListener("click", async () => {
   setDotLoading();
