@@ -1,3 +1,10 @@
+## [1.4.1](https://github.com/P4steo/EduFlow/compare/v1.4.0...v1.4.1) (2026-02-23)
+
+
+### Bug Fixes
+
+* Update script.js ([22aa658](https://github.com/P4steo/EduFlow/commit/22aa65856d8dbc7dd6c21249a0497404e2a94203))
+
 # [1.4.0](https://github.com/P4steo/EduFlow/compare/v1.3.0...v1.4.0) (2026-02-23)
 
 
