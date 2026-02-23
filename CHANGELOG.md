@@ -1,3 +1,10 @@
+## [1.6.1](https://github.com/P4steo/EduFlow/compare/v1.6.0...v1.6.1) (2026-02-23)
+
+
+### Bug Fixes
+
+* loading data ([99af507](https://github.com/P4steo/EduFlow/commit/99af50712fb1e8a1b8ccd1cf665d2048b5b8165c))
+
 # [1.6.0](https://github.com/P4steo/EduFlow/compare/v1.5.0...v1.6.0) (2026-02-23)
 
 
