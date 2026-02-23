@@ -58,12 +58,12 @@ async function loadData() {
   const maxAge = 1000 * 60 * 60 * 6;
 
   const cached = localStorage.getItem(cacheKey);
-  const cachedTime = localStorage.getItem(cacheTimeKey);
+  const cachedTime = Number(localStorage.getItem(cacheTimeKey));
 
   // OFFLINE → użyj cache lub data.json
   if (!navigator.onLine) {
     if (cached) {
-      lastTimestamp = cachedTime / 1000;
+      lastTimestamp = Number(cachedTime) / 1000;
       return JSON.parse(cached);
     }
     const local = await fetch("data.json");
@@ -385,10 +385,9 @@ function renderCards() {
     title.textContent = dateStr;
     dayBlock.appendChild(title);
 
+  
+   
 
-if (now >= start && now <= end) {
-  card.classList.add("now");
-}
 
 
     items.sort((a, b) => {
@@ -460,9 +459,9 @@ if (now >= start && now <= end) {
       const start = new Date(`2000-01-01T${item.od}:00`);
       const end = new Date(`2000-01-01T${item.do}:00`);
 
-if (now >= start && now <= end) {
-  card.classList.add("now");
-}
+      if (now >= start && now <= end) {
+        card.classList.add("now");
+      }
 
     });
 
