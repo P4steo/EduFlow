@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/P4steo/EduFlow/compare/v1.4.2...v1.5.0) (2026-02-23)
+
+
+### Features
+
+* mark current lesson ([c3e5bd3](https://github.com/P4steo/EduFlow/commit/c3e5bd3b679ae0e3125248c6594c4943f5913098))
+
 ## [1.4.2](https://github.com/P4steo/EduFlow/compare/v1.4.1...v1.4.2) (2026-02-23)
 
 
