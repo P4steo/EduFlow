@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/P4steo/EduFlow/compare/v1.3.0...v1.4.0) (2026-02-23)
+
+
+### Features
+
+* update logic of new ui ([56f05bc](https://github.com/P4steo/EduFlow/commit/56f05bcf4a59a7e3cd2d9d4642b276983200b003))
+
 # [1.3.0](https://github.com/P4steo/EduFlow/compare/v1.2.0...v1.3.0) (2026-02-23)
 
 
