@@ -1,3 +1,10 @@
+## [1.1.5](https://github.com/P4steo/EduFlow/compare/v1.1.4...v1.1.5) (2026-02-23)
+
+
+### Bug Fixes
+
+* service worker ([aa28533](https://github.com/P4steo/EduFlow/commit/aa28533f82fefc11e70421fc2cb7c309b6d23ed0))
+
 ## [1.1.4](https://github.com/P4steo/EduFlow/compare/v1.1.3...v1.1.4) (2026-02-23)
 
 
