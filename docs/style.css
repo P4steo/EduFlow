@@ -397,23 +397,38 @@ table.dataTable tbody tr.cancelled {
   transition: all 0.25s ease;
 }
 
-/* Po kliknięciu: małe kółko */
-#mobileMenuBtn.circle {
-width: 40px;
-height: 20px;
-padding: 0;
-left: auto;
-right: 15px; 
-font-size: 0; /* ukrywa tekst */
-opacity: 0.9;
-transform: scale(0.9);
-background: rgba(25, 33, 55, 0.95);
-box-shadow: 0 0 12px rgba(56, 189, 248, 0.8);
-transition:
-border-color 0.25s ease,
-box-shadow 0.25s ease,
-background 0.25s ease,
+@media (max-width: 768px) {
+  .card {
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity .25s ease, transform .25s ease;
+  }
+
+  .card.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
+@media (max-width: 768px) {
+  .table-container {
+    overflow-x: auto;
+  }
+
+  table.dataTable {
+    min-width: 700px;
+  }
+}
+
+
+@media (max-width: 768px) {
+  #mobileMenuBtn.active {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.8);
+  }
+}
+
 
 
 @media (max-width: 768px) {
@@ -442,6 +457,20 @@ background 0.25s ease,
     display: block;
   }
 }
+@media (max-width: 768px) {
+  .app.sidebar-open::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 5;
+  }
+
+  body.sidebar-open {
+    overflow: hidden;
+  }
+}
+
 /*<-- BANER STYL -->*/
 .ios-banner {
   position: fixed;
