@@ -1,3 +1,10 @@
+## [1.1.4](https://github.com/P4steo/EduFlow/compare/v1.1.3...v1.1.4) (2026-02-23)
+
+
+### Bug Fixes
+
+* apiData ([b1a389c](https://github.com/P4steo/EduFlow/commit/b1a389c36ec7f6a819d42d14d4802f166fa43e2b))
+
 ## [1.1.3](https://github.com/P4steo/EduFlow/compare/v1.1.2...v1.1.3) (2026-02-23)
 
 
