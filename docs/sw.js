@@ -1,14 +1,14 @@
 const CACHE_NAME = "static-v2";
 
 const STATIC_ASSETS = [
-  "/",
-  "/index.html",
-  "/style.css",
-  "/script.js",
-  "/manifest.json",
-  "/icons/icon-192.png",
-  "/icons/icon-512.png",
-  "/data.json"
+  "./",
+  "./index.html",
+  "./style.css",
+  "./script.js",
+  "./manifest.json",
+  "./icons/icon-192.png",
+  "./icons/icon-512.png",
+  "./data.json"
 ];
 
 
@@ -42,6 +42,7 @@ self.addEventListener("fetch", event => {
     })
   );
 });
+
 
 
 
