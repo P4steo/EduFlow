@@ -1,3 +1,10 @@
+## [1.6.2](https://github.com/P4steo/EduFlow/compare/v1.6.1...v1.6.2) (2026-02-23)
+
+
+### Bug Fixes
+
+* update sw version ([4c71590](https://github.com/P4steo/EduFlow/commit/4c715901cd2132a8b6116f7a21790a495bd9e83a))
+
 ## [1.6.1](https://github.com/P4steo/EduFlow/compare/v1.6.0...v1.6.1) (2026-02-23)
 
 
