@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/P4steo/EduFlow/compare/v1.1.5...v1.2.0) (2026-02-23)
+
+
+### Features
+
+* **pwa:** enable offline support via service worker ([3186de6](https://github.com/P4steo/EduFlow/commit/3186de6359637e102b4ddba711566178544d9386))
+
 ## [1.1.5](https://github.com/P4steo/EduFlow/compare/v1.1.4...v1.1.5) (2026-02-23)
 
 
