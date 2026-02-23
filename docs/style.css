@@ -339,6 +339,12 @@
       margin-top: 2px;
     }
 
+    .card.now {
+      border: 2px solid #38bdf8;
+      background: rgba(56,189,248,0.1);
+    }
+
+
     /* Kolory grup – pastelowe */
     .card.group-1 { border-left: 4px solid #ff6b6b; }
     .card.group-2 { border-left: 4px solid #4dabf7; }
