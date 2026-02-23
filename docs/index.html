@@ -590,7 +590,7 @@
 </div>
 
 <script type="module">
-const API_URL = "https://eduflow-qivy.onrender.com/plan";
+const _URL = "https://eduflow-qivy.onrender.com/plan";
 
 let fullData = [];
 let filteredData = [];
@@ -631,7 +631,7 @@ function setDotError() {
 async function fetchPlanWithRetry(retries = 5, delay = 1500) {
   for (let i = 0; i < retries; i++) {
     try {
-      const res = await fetch(`${API_URL}?tok=${currentTok}&_=${Date.now()}`);
+      const res = await fetch(`${_URL}?tok=${currentTok}&_=${Date.now()}`);
       const json = await res.json();
 
       if (json && json.data && Array.isArray(json.data)) {
@@ -644,7 +644,6 @@ async function fetchPlanWithRetry(retries = 5, delay = 1500) {
   }
   return null;
 }
- /* Offline */
 async function loadData() {
   const cacheKey = "cachedPlan";
   const cacheTimeKey = "cachedPlanTimestamp";
@@ -691,27 +690,6 @@ async function loadData() {
   return await local.json();
 }
 
-
-
-
-  // 3. Spróbuj pobrać z API (z retry)
-  const apiData = await fetchPlanWithRetry();
-
-  if (apiData) {
-    const now = Date.now();
-    localStorage.setItem(cacheKey, JSON.stringify(apiData));
-    localStorage.setItem(cacheTimeKey, now);
-    lastTimestamp = now / 1000;
-    return apiData;
-  }
-
-
-  // 4. API padło → fallback do cache → fallback do data.json
-  if (cached) return JSON.parse(cached);
-
-  const local = await fetch("data.json");
-  return await local.json();
-}
 
 /* WEEKEND HELPERS */
 function nextWeekendDate(fromDate = new Date()) {
@@ -1303,6 +1281,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
 
 
