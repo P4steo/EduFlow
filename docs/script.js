@@ -385,6 +385,12 @@ function renderCards() {
     title.textContent = dateStr;
     dayBlock.appendChild(title);
 
+
+if (now >= start && now <= end) {
+  card.classList.add("now");
+}
+
+
     items.sort((a, b) => {
       const t1 = new Date(`2000-01-01T${a.od}:00`);
       const t2 = new Date(`2000-01-01T${b.od}:00`);
@@ -449,6 +455,15 @@ function renderCards() {
       }
 
       dayBlock.appendChild(card);
+
+      const now = new Date();
+      const start = new Date(`2000-01-01T${item.od}:00`);
+      const end = new Date(`2000-01-01T${item.do}:00`);
+
+if (now >= start && now <= end) {
+  card.classList.add("now");
+}
+
     });
 
     container.appendChild(dayBlock);
