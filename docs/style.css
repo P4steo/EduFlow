@@ -396,19 +396,7 @@ table.dataTable tbody tr.cancelled {
   transition: all 0.25s ease;
 }
 
-/* Animacja kart — tylko mobile */
-@media (max-width: 768px) {
-  .card {
-    opacity: 0;
-    transform: translateY(6px);
-    transition: opacity .25s ease, transform .25s ease;
-  }
 
-  .card.show {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
 /* Tabela — scroll poziomy na mobile */
 @media (max-width: 768px) {
