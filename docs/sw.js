@@ -3,8 +3,6 @@ const CACHE_NAME = "eduflow-static-v1";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
-  "./script.js",
-  "./style.css",
   "./data.json",
   "./manifest.json",
   "./icons/icon-192.png",
@@ -41,3 +39,4 @@ self.addEventListener("fetch", event => {
     })
   );
 });
+
