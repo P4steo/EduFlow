@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/P4steo/EduFlow/compare/v1.2.0...v1.3.0) (2026-02-23)
+
+
+### Features
+
+* new ui for mobile devices ([0457060](https://github.com/P4steo/EduFlow/commit/0457060ff6068bcb94ce24bd98fa0a27a946de5a))
+
 # [1.2.0](https://github.com/P4steo/EduFlow/compare/v1.1.5...v1.2.0) (2026-02-23)
 
 
