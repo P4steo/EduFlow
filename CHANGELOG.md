@@ -1,3 +1,10 @@
+## [1.1.2](https://github.com/P4steo/EduFlow/compare/v1.1.1...v1.1.2) (2026-02-23)
+
+
+### Bug Fixes
+
+* **cache:** fix init() call, update localStorage writes and timestamp handling ([926083b](https://github.com/P4steo/EduFlow/commit/926083ba0eb0f25fcec390718dd9e51b3eb8cba6))
+
 ## [1.1.1](https://github.com/P4steo/EduFlow/compare/v1.1.0...v1.1.1) (2026-02-22)
 
 
