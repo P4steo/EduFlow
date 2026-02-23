@@ -1,3 +1,10 @@
+## [1.4.2](https://github.com/P4steo/EduFlow/compare/v1.4.1...v1.4.2) (2026-02-23)
+
+
+### Bug Fixes
+
+* Update style.css ([2210333](https://github.com/P4steo/EduFlow/commit/2210333525033f388ae1201d0e5d3be8cadc29e7))
+
 ## [1.4.1](https://github.com/P4steo/EduFlow/compare/v1.4.0...v1.4.1) (2026-02-23)
 
 
