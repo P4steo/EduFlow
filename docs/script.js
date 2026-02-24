@@ -144,7 +144,7 @@ function findNextWeekendRange(currentRange) {
 
   // 1. Pobieramy wszystkie daty i obcinamy dzień tygodnia
   const rawDates = fullData.map(ev => ev.data);
-  console.log("rawDates:", rawDates);
+ 
 
   const cleanedDates = rawDates
     .map(str => {
@@ -153,14 +153,14 @@ function findNextWeekendRange(currentRange) {
     })
     .filter(Boolean);
 
-  console.log("cleanedDates:", cleanedDates);
+  
 
   // 2. Filtrujemy poprawny format
   const uniqueDates = [...new Set(
     cleanedDates.filter(str => /^\d{4}\.\d{2}\.\d{2}$/.test(str))
   )];
 
-  console.log("uniqueDates:", uniqueDates);
+  
 
   // 3. Zamieniamy na Date
   const sorted = uniqueDates
@@ -351,6 +351,7 @@ function render() {
   } else {
     document.getElementById("cardsContainer").style.display = "none";
     document.getElementById("tableContainer").style.display = "block";
+    $('#planTable').DataTable().columns.adjust();
     renderTable();
   }
 }
@@ -365,6 +366,7 @@ function groupByDate(data) {
 }
 
 function renderCards() {
+  const now = new Date();
   const container = document.getElementById("cardsContainer");
   container.innerHTML = "";
 
@@ -456,7 +458,7 @@ function renderCards() {
 
       dayBlock.appendChild(card);
 
-      const now = new Date();
+      
       const start = new Date(`2000-01-01T${item.od}:00`);
       const end = new Date(`2000-01-01T${item.do}:00`);
 
@@ -616,8 +618,9 @@ document.getElementById("reloadBtn").addEventListener("click", async () => {
 
   fullData = data;
 
-  localStorage.setItem("cachedPlan", JSON.stringify(data));
-  localStorage.setItem("cachedPlanTimestamp", Date.now());
+  localStorage.setItem("cachedPlan_" + currentTok, JSON.stringify(data));
+  localStorage.setItem("cachedPlanTimestamp_" + currentTok, Date.now());
+
   lastTimestamp = Date.now() / 1000;
 
   document.getElementById("statusBox").textContent =
