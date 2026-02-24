@@ -670,36 +670,72 @@ document.getElementById("reloadBtn").addEventListener("click", async () => {
 });
 
 
-/* MOBILE MENU */
+/* MOBILE MENU — FIXED */
 const mobileBtn = document.getElementById("mobileMenuBtn");
-mobileBtn.addEventListener("click", () => {
-  mobileBtn.classList.toggle("circle");
-});
-
 const sidebar = document.querySelector(".sidebar");
 
+// centralny stan
+let sidebarOpen = false;
+
+// overlay
+const overlay = document.createElement("div");
+overlay.className = "app-overlay";
+document.body.appendChild(overlay);
+
+// funkcja sterująca
+function setSidebarOpen(open) {
+  sidebarOpen = !!open;
+
+  if (sidebarOpen) {
+    sidebar.classList.add("open");
+    mobileBtn.classList.add("circle");
+    overlay.classList.add("show");
+  } else {
+    sidebar.classList.remove("open");
+    mobileBtn.classList.remove("circle");
+    overlay.classList.remove("show");
+  }
+}
+
+// kliknięcie przycisku
+mobileBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  setSidebarOpen(!sidebarOpen);
+});
+
+// kliknięcie overlay
+overlay.addEventListener("click", () => setSidebarOpen(false));
+
+// kliknięcie poza sidebar
+document.addEventListener("click", (e) => {
+  if (window.innerWidth > 768) return;
+  if (!sidebar.contains(e.target) && e.target !== mobileBtn) {
+    setSidebarOpen(false);
+  }
+});
+
+// zapobieganie zamykaniu sidebaru przy klikaniu selectów
+["specSelect", "groupSelect", "startDate", "endDate"].forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  ["click", "touchstart", "touchend", "change"].forEach(evt => {
+    el.addEventListener(evt, e => e.stopPropagation(), { passive: true });
+  });
+});
+
+// tryb mobilny
 function updateMobileMode() {
   if (window.innerWidth <= 768) {
     mobileBtn.style.display = "block";
   } else {
     mobileBtn.style.display = "none";
-    sidebar.classList.remove("open");
+    setSidebarOpen(false);
   }
 }
 
-mobileBtn.addEventListener("click", () => {
-  sidebar.classList.toggle("open");
-});
-
-document.addEventListener("click", (e) => {
-  if (window.innerWidth > 768) return;
-  if (!sidebar.contains(e.target) && e.target !== mobileBtn) {
-    sidebar.classList.remove("open");
-  }
-});
-
 window.addEventListener("resize", updateMobileMode);
 updateMobileMode();
+
 
 /* START */
 init();
