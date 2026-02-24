@@ -746,7 +746,7 @@ init();
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./sw.js?v=4.0.1")
+      .register("./sw.js?v=4.0.2")
       .then(reg => {
         reg.addEventListener("updatefound", () => {
           const newWorker = reg.installing;
