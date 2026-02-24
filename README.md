@@ -117,6 +117,18 @@ Pełna historia zmian znajduje się tutaj:
 👉 **CHANGELOG.md**
 
 ---
+## 📸 Screenshots
+
+### Widok mobilny
+![Mobile view](screenshots/mobile-view.png)
+
+### Widok desktopowy
+![Desktop view](screenshots/desktop-view.png)
+
+### Panel filtrów
+![Filters](screenshots/filters.png)
+
+---
 
 ## 📜 Licencja
 
