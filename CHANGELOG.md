@@ -1,3 +1,10 @@
+# [1.8.0](https://github.com/P4steo/EduFlow/compare/v1.7.1...v1.8.0) (2026-02-24)
+
+
+### Features
+
+* **ui:** introduce mobile background blur with corrected overlay layering ([a6c7b50](https://github.com/P4steo/EduFlow/commit/a6c7b50294590f075913cc57194b7b10d710ffaf))
+
 ## [1.7.1](https://github.com/P4steo/EduFlow/compare/v1.7.0...v1.7.1) (2026-02-24)
 
 
