@@ -680,7 +680,7 @@ let sidebarOpen = false;
 // overlay
 const overlay = document.createElement("div");
 overlay.className = "app-overlay";
-document.body.appendChild(overlay);
+document.body.insertBefore(overlay, document.body.firstChild);
 
 // funkcja sterująca
 function setSidebarOpen(open) {
