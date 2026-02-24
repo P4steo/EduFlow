@@ -1,3 +1,10 @@
+## [1.7.1](https://github.com/P4steo/EduFlow/compare/v1.7.0...v1.7.1) (2026-02-24)
+
+
+### Bug Fixes
+
+* mobile menu ([207ab52](https://github.com/P4steo/EduFlow/commit/207ab52be295e9d143d13bc9744be93aa56807d1))
+
 # [1.7.0](https://github.com/P4steo/EduFlow/compare/v1.6.4...v1.7.0) (2026-02-24)
 
 
