@@ -1,3 +1,10 @@
+# [1.9.0](https://github.com/P4steo/EduFlow/compare/v1.8.0...v1.9.0) (2026-02-24)
+
+
+### Features
+
+* **docs:** update README with improved structure, badges and refined feature list ([5a9d028](https://github.com/P4steo/EduFlow/commit/5a9d0287ea4fd50eee678b73d0e19ba062c681eb))
+
 # [1.8.0](https://github.com/P4steo/EduFlow/compare/v1.7.1...v1.8.0) (2026-02-24)
 
 
