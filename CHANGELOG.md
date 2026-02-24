@@ -4,6 +4,19 @@
 ### Features
 
 * **ui:** introduce mobile background blur with corrected overlay layering ([a6c7b50](https://github.com/P4steo/EduFlow/commit/a6c7b50294590f075913cc57194b7b10d710ffaf))
+### Added
+- Background blur effect when opening the mobile sidebar
+- Dedicated overlay layer inserted before the sidebar in the DOM
+- Proper z-index hierarchy ensuring the overlay sits above main content but below the sidebar
+
+### Improved
+- Sidebar remains sharp and fully interactive while the background blurs
+- More intuitive tap‑to‑close behavior on mobile
+- More consistent scroll locking when the sidebar is open
+
+### Fixed (implicitly)
+- Sidebar no longer gets blurred due to incorrect stacking context
+- Overlay no longer blocks sidebar interactions
 
 ## [1.7.1](https://github.com/P4steo/EduFlow/compare/v1.7.0...v1.7.1) (2026-02-24)
 
