@@ -1,3 +1,10 @@
+## [1.6.4](https://github.com/P4steo/EduFlow/compare/v1.6.3...v1.6.4) (2026-02-24)
+
+
+### Bug Fixes
+
+* table view and some optimisation ([a1eda5c](https://github.com/P4steo/EduFlow/commit/a1eda5cb649260c858adab1e8db7d6c05fed4315))
+
 ## [1.6.3](https://github.com/P4steo/EduFlow/compare/v1.6.2...v1.6.3) (2026-02-24)
 
 
