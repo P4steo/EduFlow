@@ -500,12 +500,22 @@
   border-color: #38bdf8;
 }
 /* ============================
+   NAPRAWA STACKING CONTEXT
+   ============================ */
+
+/* sprawia, że overlay (z-index:15) jest NAD kartami */
+.main {
+  position: relative;
+  z-index: 5;
+}
+
+/* ============================
    OVERLAY POD ROZMYCIE TŁA
    ============================ */
 .app-overlay {
   position: fixed;
   inset: 0;
-  z-index: 15; /* poniżej sidebaru (z-index:10), powyżej kart */
+  z-index: 15; /* nad .main (5), pod sidebar (10) */
   pointer-events: none;
   opacity: 0;
   background: rgba(0, 0, 0, 0);
