@@ -1,4 +1,4 @@
-const SW_VERSION = "v4.0.1";
+const SW_VERSION = "v4.0.2";
 const CACHE_NAME = `static-${SW_VERSION}`;
 
 const STATIC_ASSETS = [
@@ -62,4 +62,5 @@ self.addEventListener("message", event => {
     });
   }
 });
+
 
