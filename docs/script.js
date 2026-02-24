@@ -546,6 +546,13 @@ function renderTable() {
 }
 /* INIT */
 async function init() {
+  const savedTok = localStorage.getItem("lastSpecTok");
+  if (savedTok) {
+    currentTok = savedTok;
+    document.getElementById("specSelect").value = savedTok;
+  }
+
+  
   setDotLoading();
   document.getElementById("noDataMessage").textContent = "Ładowanie danych…";
   document.getElementById("noDataMessage").style.display = "block";
@@ -576,6 +583,7 @@ async function init() {
 document.getElementById("specSelect").addEventListener("change", async e => {
   currentTok = e.target.value;
 
+  localStorage.setItem("lastSpecTok", currentTok);
   // pobierz cache dla tej specjalizacji
   const cacheKey = "cachedPlan_" + currentTok;
   const cacheTimeKey = "cachedPlanTimestamp_" + currentTok;
