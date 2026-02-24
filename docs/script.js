@@ -53,8 +53,9 @@ async function fetchPlanWithRetry(retries = 5, delay = 1500) {
   return null;
 }
 async function loadData() {
-  const cacheKey = "cachedPlan";
-  const cacheTimeKey = "cachedPlanTimestamp";
+  const cacheKey = "cachedPlan_" + currentTok;
+  const cacheTimeKey = "cachedPlanTimestamp_" + currentTok;
+
   const maxAge = 1000 * 60 * 60 * 6;
 
   const cached = localStorage.getItem(cacheKey);
