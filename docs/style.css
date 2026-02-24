@@ -499,3 +499,62 @@
   background: rgba(56, 189, 248, 0.25);
   border-color: #38bdf8;
 }
+/* ============================
+   OVERLAY POD ROZMYCIE TŁA
+   ============================ */
+.app-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 15; /* poniżej sidebaru (z-index:10), powyżej kart */
+  pointer-events: none;
+  opacity: 0;
+  background: rgba(0, 0, 0, 0);
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
+  transition:
+    opacity 220ms ease,
+    backdrop-filter 220ms ease,
+    -webkit-backdrop-filter 220ms ease,
+    background 220ms ease;
+}
+
+.app-overlay.show {
+  pointer-events: auto;
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+/* ============================
+   FALLBACK: rozmycie kontenera kart
+   ============================ */
+.cards-blur {
+  filter: blur(6px);
+  transition: filter 220ms ease;
+  will-change: filter;
+}
+
+/* ============================
+   BLOKADA SCROLLA PRZY OTWARTYM SIDEBARZE
+   ============================ */
+body.no-scroll {
+  overflow: hidden;
+}
+
+/* ============================
+   PRZYCISK FILTRÓW – zapobieganie zawijaniu
+   ============================ */
+#mobileMenuBtn {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* kontener na przyciski */
+.mobile-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
