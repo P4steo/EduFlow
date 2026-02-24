@@ -500,22 +500,25 @@
   border-color: #38bdf8;
 }
 /* ============================
-   NAPRAWA STACKING CONTEXT
+   POPRAWKA STACKING CONTEXT
    ============================ */
 
-/* sprawia, że overlay (z-index:15) jest NAD kartami */
-.main {
-  position: relative;
-  z-index: 5;
+/* sidebar musi być NAJWYŻEJ */
+.sidebar {
+  z-index: 20 !important;
 }
 
-/* ============================
-   OVERLAY POD ROZMYCIE TŁA
-   ============================ */
+/* main musi być niżej niż overlay */
+.main {
+  position: relative;
+  z-index: 5 !important;
+}
+
+/* overlay pomiędzy main a sidebar */
 .app-overlay {
   position: fixed;
   inset: 0;
-  z-index: 15; /* nad .main (5), pod sidebar (10) */
+  z-index: 15 !important; /* POD sidebar, NAD kartami */
   pointer-events: none;
   opacity: 0;
   background: rgba(0, 0, 0, 0);
@@ -536,35 +539,29 @@
   -webkit-backdrop-filter: blur(6px);
 }
 
-/* ============================
-   FALLBACK: rozmycie kontenera kart
-   ============================ */
+/* fallback blur */
 .cards-blur {
   filter: blur(6px);
   transition: filter 220ms ease;
   will-change: filter;
 }
 
-/* ============================
-   BLOKADA SCROLLA PRZY OTWARTYM SIDEBARZE
-   ============================ */
+/* blokada scrolla */
 body.no-scroll {
   overflow: hidden;
 }
 
-/* ============================
-   PRZYCISK FILTRÓW – zapobieganie zawijaniu
-   ============================ */
+/* przycisk filtrów */
 #mobileMenuBtn {
   white-space: nowrap;
   flex-shrink: 0;
 }
 
-/* kontener na przyciski */
 .mobile-controls {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: nowrap;
 }
+
 
