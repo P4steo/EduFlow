@@ -1,3 +1,10 @@
+# [1.7.0](https://github.com/P4steo/EduFlow/compare/v1.6.4...v1.7.0) (2026-02-24)
+
+
+### Features
+
+* add last choosen spec memory ([649a3e7](https://github.com/P4steo/EduFlow/commit/649a3e7ad48021f8490a8f2ce3662ceb2ede7a19))
+
 ## [1.6.4](https://github.com/P4steo/EduFlow/compare/v1.6.3...v1.6.4) (2026-02-24)
 
 
