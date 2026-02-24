@@ -365,11 +365,24 @@ function groupByDate(data) {
   return Object.entries(map).sort((a, b) => new Date(a[0]) - new Date(b[0]));
 }
 
+function parseTime(t) {
+  if (!t || typeof t !== "string") return NaN;
+  const parts = t.split(":").map(s => s.trim());
+  const h = Number(parts[0] || 0);
+  const m = Number(parts[1] || 0);
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return NaN;
+  return h * 60 + m;
+}
+
+
 function renderCards() {
   const now = new Date();
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+
   const container = document.getElementById("cardsContainer");
   container.innerHTML = "";
 
+  const frag = document.createDocumentFragment();
   const byDate = groupByDate(filteredData);
 
   byDate.forEach(([dateStr, items], i) => {
@@ -377,7 +390,7 @@ function renderCards() {
       const sep = document.createElement("hr");
       sep.style.margin = "10px 0";
       sep.style.borderColor = "rgba(31,41,55,0.7)";
-      container.appendChild(sep);
+      frag.appendChild(sep);
     }
 
     const dayBlock = document.createElement("div");
@@ -388,17 +401,11 @@ function renderCards() {
     title.textContent = dateStr;
     dayBlock.appendChild(title);
 
-  
-   
-
-
-
+    // szybkie sortowanie po minutach
     items.sort((a, b) => {
-      const t1 = new Date(`2000-01-01T${a.od}:00`);
-      const t2 = new Date(`2000-01-01T${b.od}:00`);
-      const diff = t1 - t2;
-      if (diff !== 0) return diff;
-
+      const t1 = parseTime(a.od);
+      const t2 = parseTime(b.od);
+      if (t1 !== t2) return t1 - t2;
       return (a.group_code || "").localeCompare(b.group_code || "");
     });
 
@@ -456,21 +463,23 @@ function renderCards() {
         card.appendChild(uw);
       }
 
-      dayBlock.appendChild(card);
+      // szybkie podświetlanie
+      const start = parseTime(item.od);
+      const end = parseTime(item.do);
 
-      
-      const start = new Date(`2000-01-01T${item.od}:00`);
-      const end = new Date(`2000-01-01T${item.do}:00`);
-
-      if (now >= start && now <= end) {
+      if (nowMinutes >= start && nowMinutes <= end) {
         card.classList.add("now");
       }
 
+      dayBlock.appendChild(card);
     });
 
-    container.appendChild(dayBlock);
+    frag.appendChild(dayBlock);
   });
+
+  container.appendChild(frag);
 }
+
 
 function renderTable() {
   const rows = filteredData
@@ -564,10 +573,30 @@ async function init() {
 }
 
 /* EVENTS */
-document.getElementById("specSelect").addEventListener("change", e => {
+document.getElementById("specSelect").addEventListener("change", async e => {
   currentTok = e.target.value;
+
+  // pobierz cache dla tej specjalizacji
+  const cacheKey = "cachedPlan_" + currentTok;
+  const cacheTimeKey = "cachedPlanTimestamp_" + currentTok;
+
+  const cached = localStorage.getItem(cacheKey);
+  const cachedTime = Number(localStorage.getItem(cacheTimeKey));
+
+  if (cached && cachedTime) {
+    // używamy danych z cache — bez spinnera, bez ładowania
+    fullData = JSON.parse(cached);
+    lastTimestamp = cachedTime / 1000;
+
+    updateGroupFilter();
+    applyAllFilters();
+    return;
+  }
+
+  // jeśli nie ma cache → dopiero wtedy pełne ładowanie
   init();
 });
+
 
 document.getElementById("groupSelect").addEventListener("change", e => {
   currentGroup = e.target.value;
