@@ -1,3 +1,10 @@
+## [1.9.1](https://github.com/P4steo/EduFlow/compare/v1.9.0...v1.9.1) (2026-02-25)
+
+
+### Bug Fixes
+
+* **weekend-range:** correct nearest and next weekend detection logic ([254318f](https://github.com/P4steo/EduFlow/commit/254318f4157d924a39adb557994b7759210e9e23))
+
 # [1.9.0](https://github.com/P4steo/EduFlow/compare/v1.8.0...v1.9.0) (2026-02-24)
 
 
