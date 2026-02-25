@@ -10,7 +10,7 @@ EduFlow automatycznie pobiera, przetwarza i prezentuje plan zjazdów DSW w nowoc
 Zero PDF‑ów, zero chaosu — tylko szybki dostęp do tego, co naprawdę ważne.
 
 ---
-## ☕ Wsparcie Jeśli projekt Ci się podoba i chcesz wesprzeć jego rozwój: 👉 https://buycoffee.to/p4steo
+## ☕ Jeśli projekt Ci się podoba i chcesz wesprzeć jego rozwój: 👉 https://buycoffee.to/p4steo
 ---
 ## 🔗 Linki
 
