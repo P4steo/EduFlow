@@ -12,14 +12,14 @@ Starsze wersje nie otrzymują poprawek poza krytycznymi przypadkami.
 
 ## Reporting a Vulnerability
 
-Jeśli znalazłeś potencjalną podatność, proszę zgłoś ją w sposób poufny:
+Jeśli znalazłeś potencjalną podatność, zgłoś ją poufnie poprzez Discussions:
 
-- wyślij wiadomość na: **beigerpawel@gmail.com**
-- w zgłoszeniu opisz:
-  - na czym polega problem
-  - jak go odtworzyć
-  - jaki może mieć wpływ
+👉 **https://github.com/p4steo/EduFlow/discussions/categories/security**
+
+W zgłoszeniu opisz:
+- na czym polega problem  
+- jak go odtworzyć  
+- jaki może mieć wpływ  
 
 Odpowiedź otrzymasz zazwyczaj w ciągu **72 godzin**.  
-Jeśli podatność zostanie potwierdzona, zostanie naprawiona priorytetowo, a Ty otrzymasz informację o statusie i planowanym terminie poprawki.
-
+Potwierdzone podatności są naprawiane priorytetowo, a status będzie aktualizowany w wątku dyskusji.
