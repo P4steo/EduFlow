@@ -14,7 +14,7 @@ Starsze wersje nie otrzymują poprawek poza krytycznymi przypadkami.
 
 Jeśli znalazłeś potencjalną podatność, zgłoś ją poufnie poprzez Discussions:
 
-👉 **https://github.com/p4steo/EduFlow/discussions/categories/Security—zgłaszanie podatności**
+👉 **https://github.com/p4steo/EduFlow/discussions/categories/security-zg%C5%82aszanie-podatno%C5%9Bci**
 
 W zgłoszeniu opisz:
 - na czym polega problem  
