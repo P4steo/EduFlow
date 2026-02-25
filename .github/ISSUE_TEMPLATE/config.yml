@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Pytania i dyskusje
+    url: https://github.com/p4steo/EduFlow/discussions
+    about: Jeśli masz pytanie lub chcesz porozmawiać — użyj Discussions zamiast Issues.
