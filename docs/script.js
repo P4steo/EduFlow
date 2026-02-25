@@ -100,133 +100,88 @@ async function loadData() {
 }
 
 
-/* WEEKEND HELPERS */
-function nextWeekendDate(fromDate = new Date()) {
-  const d = new Date(fromDate);
-  while (true) {
-    const day = d.getDay();
-    if (day === 6 || day === 0) return d;
-    d.setDate(d.getDate() + 1);
-  }
-}
+// === NOWE FUNKCJE WEEKENDOWE ===
 
-function findNearestWeekendRange() {
-  let d = new Date();
-
-  for (let i = 0; i < 60; i++) {
-    const saturday = nextWeekendDate(d);
-    const sunday = new Date(saturday);
-
-    if (saturday.getDay() === 6) {
-      sunday.setDate(saturday.getDate() + 1);
-    } else {
-      saturday.setDate(saturday.getDate() - 1);
-    }
-
-    const satStr = saturday.toISOString().split("T")[0].replace(/-/g, ".");
-    const sunStr = sunday.toISOString().split("T")[0].replace(/-/g, ".");
-
-    const hasSat = fullData.some(item => item.data && item.data.includes(satStr));
-    const hasSun = fullData.some(item => item.data && item.data.includes(sunStr));
-
-    if (hasSat || hasSun) {
-      return { sat: satStr, sun: sunStr };
-    }
-
-    d.setDate(saturday.getDate() + 2);
-  }
-
-  return null;
-}
-
-function findNextWeekendRange(currentRange) {
-  console.group("findNextWeekendRange() START");
-
-  // 1. Pobieramy wszystkie daty i obcinamy dzień tygodnia
-  const rawDates = fullData.map(ev => ev.data);
- 
-
-  const cleanedDates = rawDates
-    .map(str => {
-      if (typeof str !== "string") return null;
-      return str.split(" ")[0]; // bierzemy tylko YYYY.MM.DD
-    })
-    .filter(Boolean);
-
-  
-
-  // 2. Filtrujemy poprawny format
-  const uniqueDates = [...new Set(
-    cleanedDates.filter(str => /^\d{4}\.\d{2}\.\d{2}$/.test(str))
-  )];
-
-  
-
-  // 3. Zamieniamy na Date
-  const sorted = uniqueDates
-    .map(str => {
-      const [yy, mm, dd] = str.split(".").map(Number);
-      const dt = new Date(yy, mm - 1, dd);
-      if (isNaN(dt.getTime())) {
-        console.error("❌ Invalid Date:", str);
-        return null;
-      }
-      return dt;
-    })
+// Pobiera unikalne daty z fullData i sortuje
+function getSortedUniqueDates() {
+  const cleaned = fullData
+    .map(ev => ev.data?.split(" ")[0])
     .filter(Boolean)
-    .sort((a, b) => a - b);
+    .filter(str => /^\d{4}\.\d{2}\.\d{2}$/.test(str));
 
-  console.log("sorted dates:", sorted);
+  const unique = [...new Set(cleaned)];
 
-  if (sorted.length === 0) {
-    console.error("❌ No valid dates — cannot continue");
-    console.groupEnd();
-    return null;
-  }
-
-  // 4. Jeśli currentRange jest niepoprawny → pierwszy weekend
-  if (!currentRange || !currentRange.sat || !currentRange.sun) {
-    console.warn("⚠ currentRange invalid — using FIRST weekend");
-
-    const first = sorted[0];
-    const firstSun = new Date(first);
-    firstSun.setDate(first.getDate() + 1);
-
-    const result = {
-      sat: first.toISOString().split("T")[0].replace(/-/g, "."),
-      sun: firstSun.toISOString().split("T")[0].replace(/-/g, ".")
-    };
-
-    console.log("Returning FIRST weekend:", result);
-    console.groupEnd();
-    return result;
-  }
-
-  // 5. Normalne działanie
-  const [y, m, d] = currentRange.sun.split(".").map(Number);
-  const currentSun = new Date(y, m - 1, d);
-
-  console.log("currentSun:", currentSun);
-
-  let nextDate = sorted.find(dt => dt > currentSun);
-
-  if (!nextDate) {
-    console.warn("⚠ No next weekend — using LAST weekend");
-    nextDate = sorted[sorted.length - 1];
-  }
-
-  const nextSun = new Date(nextDate);
-  nextSun.setDate(nextDate.getDate() + 1);
-
-  const result = {
-    sat: nextDate.toISOString().split("T")[0].replace(/-/g, "."),
-    sun: nextSun.toISOString().split("T")[0].replace(/-/g, ".")
-  };
-
-  console.log("Returning NEXT weekend:", result);
-  console.groupEnd();
-  return result;
+  return unique
+    .map(str => {
+      const [y, m, d] = str.split(".").map(Number);
+      return { str, date: new Date(y, m - 1, d) };
+    })
+    .sort((a, b) => a.date - b.date);
 }
+
+// Buduje listę weekendów na podstawie faktycznych dat
+function buildWeekendRanges() {
+  const dates = getSortedUniqueDates();
+  const ranges = [];
+
+  for (let i = 0; i < dates.length; i++) {
+    const d = dates[i].date;
+    const day = d.getDay(); // 6 = sobota, 0 = niedziela
+
+    if (day === 6) {
+      // sobota → sprawdzamy czy następny dzień to niedziela
+      const next = dates[i + 1];
+      const sun = new Date(d);
+      sun.setDate(d.getDate() + 1);
+
+      const hasSun = next && next.date.toDateString() === sun.toDateString();
+
+      ranges.push({
+        sat: dates[i].str,
+        sun: hasSun
+          ? next.str
+          : sun.toISOString().split("T")[0].replace(/-/g, ".")
+      });
+    }
+  }
+
+  return ranges;
+}
+
+// Najbliższy weekend z danych
+function findNearestWeekendRange() {
+  const ranges = buildWeekendRanges();
+  if (ranges.length === 0) return null;
+
+  const today = new Date();
+  const todayMid = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+  const future = ranges.find(r => {
+    const [y, m, d] = r.sat.split(".").map(Number);
+    const sat = new Date(y, m - 1, d);
+    return sat >= todayMid;
+  });
+
+  return future || ranges[0];
+}
+
+// Następny weekend po aktualnym
+function findNextWeekendRange(currentRange) {
+  const ranges = buildWeekendRanges();
+  if (ranges.length === 0) return null;
+
+  if (!currentRange) return ranges[0];
+
+  const idx = ranges.findIndex(
+    r => r.sat === currentRange.sat && r.sun === currentRange.sun
+  );
+
+  if (idx === -1) return ranges[0];
+
+  return ranges[idx + 1] || ranges[ranges.length - 1];
+}
+
+
 
 /* FILTERING */
 function filterByDateMode() {
