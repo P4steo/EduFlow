@@ -1,3 +1,10 @@
+## [1.9.3](https://github.com/P4steo/EduFlow/compare/v1.9.2...v1.9.3) (2026-03-16)
+
+
+### Bug Fixes
+
+* **weekend-range): ensure nearest weekend includes current Sunday  When the current day is Sunday, the app incorrectly selected the next upcoming weekend instead of continuing to display the ongoing one. This caused the "Nearest weekend" view to jump forward prematurely.  Added a Sunday-specific check in findNearestWeekendRange(:** - if today is Sunday and matches any weekend's `sun` date,   return that weekend as the active one.  This preserves correct behavior for ongoing zjazdy and keeps the UI consistent throughout the entire weekend. ([a6be450](https://github.com/P4steo/EduFlow/commit/a6be45088659184cd846e15d758ece9828c2d801))
+
 ## [1.9.2](https://github.com/P4steo/EduFlow/compare/v1.9.1...v1.9.2) (2026-03-16)
 
 
