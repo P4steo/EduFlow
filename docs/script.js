@@ -156,14 +156,19 @@ function findNearestWeekendRange() {
   const today = new Date();
   const todayMid = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
-  const future = ranges.find(r => {
+ const future = ranges.find(r => {
     const [y, m, d] = r.sat.split(".").map(Number);
     const sat = new Date(y, m - 1, d);
-    return sat >= todayMid;
-  });
 
-  return future || ranges[0];
-}
+    const [y2, m2, d2] = r.sun.split(".").map(Number);
+    const sun = new Date(y2, m2 - 1, d2);
+
+  // jeśli dziś jest między sobotą a niedzielą -  bieżący zjazd
+    if (todayMid >= sat && todayMid <= sun) return true;
+
+  // w przeciwnym razie następny
+    return sat >= todayMid;
+});
 
 // Następny weekend po aktualnym
 function findNextWeekendRange(currentRange) {
