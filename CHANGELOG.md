@@ -1,3 +1,10 @@
+## [1.9.2](https://github.com/P4steo/EduFlow/compare/v1.9.1...v1.9.2) (2026-03-16)
+
+
+### Bug Fixes
+
+* show sunday and saturday at closest weekend ([8ac284e](https://github.com/P4steo/EduFlow/commit/8ac284ed84907a3f5ff81ddc88758bef0949a90d))
+
 ## [1.9.1](https://github.com/P4steo/EduFlow/compare/v1.9.0...v1.9.1) (2026-02-25)
 
 
