@@ -156,6 +156,14 @@ function findNearestWeekendRange() {
   const today = new Date();
   const todayMid = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
+  // 🟢 FIX: jeśli dziś jest niedziela i istnieje weekend z tą niedzielą → zwróć go
+  if (today.getDay() === 0) { // 0 = niedziela
+    const todayStr = today.toISOString().split("T")[0].replace(/-/g, ".");
+    const current = ranges.find(r => r.sun === todayStr);
+    if (current) return current;
+  }
+
+  // standardowe działanie
   const future = ranges.find(r => {
     const [y, m, d] = r.sat.split(".").map(Number);
     const sat = new Date(y, m - 1, d);
@@ -164,12 +172,6 @@ function findNearestWeekendRange() {
 
   return future || ranges[0];
 }
-
-
-
-
-
-
 
 
 // Następny weekend po aktualnym
@@ -708,7 +710,7 @@ init();
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./sw.js?v=4.0.2")
+      .register("./sw.js?v=4.0.3")
       .then(reg => {
         reg.addEventListener("updatefound", () => {
           const newWorker = reg.installing;
