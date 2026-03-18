@@ -719,13 +719,23 @@ body.theme-light .card {
    WYRAZISTE KOLORY GRUP W JASNYM MOTYWIE
    ============================================ */
 
-body.theme-light .card.group-1 { border-left: 6px solid #ff4d5e !important; }
-body.theme-light .card.group-2 { border-left: 6px solid #4d9bff !important; }
-body.theme-light .card.group-3 { border-left: 6px solid #2ecc71 !important; }
-body.theme-light .card.group-4 { border-left: 6px solid #9b59b6 !important; }
-body.theme-light .card.group-5 { border-left: 6px solid #ff9f43 !important; }
-body.theme-light .card.group-6 { border-left: 6px solid #1abc9c !important; }
-body.theme-light .card.group-7 { border-left: 6px solid #ff6fae !important; }
+/* Border-left – mocne kolory */
+body.theme-light .card.group-1 { border-left: 6px solid #ff3b47 !important; }
+body.theme-light .card.group-2 { border-left: 6px solid #3b82f6 !important; }
+body.theme-light .card.group-3 { border-left: 6px solid #22c55e !important; }
+body.theme-light .card.group-4 { border-left: 6px solid #8b5cf6 !important; }
+body.theme-light .card.group-5 { border-left: 6px solid #f59e0b !important; }
+body.theme-light .card.group-6 { border-left: 6px solid #14b8a6 !important; }
+body.theme-light .card.group-7 { border-left: 6px solid #ec4899 !important; }
+
+/* Opcjonalnie: pastelowe tło meta-tagów */
+body.theme-light .card.group-1 .card-meta span { background: #ffe5e8 !important; }
+body.theme-light .card.group-2 .card-meta span { background: #e3f0ff !important; }
+body.theme-light .card.group-3 .card-meta span { background: #e4ffe9 !important; }
+body.theme-light .card.group-4 .card-meta span { background: #f3e8ff !important; }
+body.theme-light .card.group-5 .card-meta span { background: #fff1db !important; }
+body.theme-light .card.group-6 .card-meta span { background: #d9fff7 !important; }
+body.theme-light .card.group-7 .card-meta span { background: #ffe0ef !important; }
 
 
 
