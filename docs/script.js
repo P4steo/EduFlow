@@ -677,6 +677,24 @@ function updateMobileMode() {
 window.addEventListener("resize", updateMobileMode);
 updateMobileMode();
 
+/* THEME SWITCHER */
+const themeToggle = document.getElementById("themeToggle");
+
+function applyTheme() {
+  const theme = localStorage.getItem("theme") || "dark";
+  document.body.classList.toggle("theme-light", theme === "light");
+}
+
+applyTheme();
+
+themeToggle.addEventListener("click", () => {
+  const current = localStorage.getItem("theme") || "dark";
+  const next = current === "dark" ? "light" : "dark";
+  localStorage.setItem("theme", next);
+  applyTheme();
+});
+
+
 
 
 /* START */
