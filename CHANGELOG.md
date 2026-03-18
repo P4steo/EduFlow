@@ -1,3 +1,10 @@
+# [1.10.0](https://github.com/P4steo/EduFlow/compare/v1.9.3...v1.10.0) (2026-03-18)
+
+
+### Features
+
+* finalize light mode overrides and unify group color system ([b1c4bb0](https://github.com/P4steo/EduFlow/commit/b1c4bb04d9259d63923bd76d63c5a1ae90b113e3))
+
 ## [1.9.3](https://github.com/P4steo/EduFlow/compare/v1.9.2...v1.9.3) (2026-03-16)
 
 
