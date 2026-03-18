@@ -565,224 +565,114 @@ body.no-scroll {
 }
 
 /* ============================================
-   JASNY PASTEL — MOTYW (LIGHT THEME)
+   PEŁNE NADPISANIE CIEMNYCH ELEMENTÓW W LIGHT MODE
    ============================================ */
 
 body.theme-light {
-  --bg: #f7f8fa;
-  --bg-soft: #ffffff;
-  --bg-softer: #eef1f5;
-
-  --accent: #3b82f6;
-  --accent-soft: rgba(59, 130, 246, 0.15);
-
-  --text: #1e293b;
-  --text-soft: #475569;
-
-  --border: #cbd5e1;
-  --danger: #ef4444;
-
-  /* pastelowe kolory grup */
-  --group-1: #ff8a8a;
-  --group-2: #8ec5ff;
-  --group-3: #9ff2b2;
-  --group-4: #c7a6ff;
-  --group-5: #ffd29a;
-  --group-6: #8ff2d2;
-  --group-7: #ff9ac2;
+  background: var(--bg) !important;
 }
 
-/* TŁO APLIKACJI */
-body.theme-light {
-  background: radial-gradient(circle at top, #ffffff 0, #f7f8fa 55%);
-}
-
-/* SIDEBAR */
-body.theme-light .sidebar {
-  background: linear-gradient(180deg, #ffffff 0%, #f7f8fa 100%);
-  border-right: 1px solid var(--border);
-}
-
-/* KARTY */
-body.theme-light .card {
-  background: #ffffff;
-  border-color: var(--border);
-}
-
-body.theme-light .day-block {
-  background: #ffffff;
-  border-color: var(--border);
-}
-
-/* META TAGI */
-body.theme-light .card-meta span {
-  background: #f1f5f9;
-  border-color: var(--border);
-}
-
-/* KOLORY GRUP */
-body.theme-light .card.group-1 { border-left: 4px solid var(--group-1); }
-body.theme-light .card.group-2 { border-left: 4px solid var(--group-2); }
-body.theme-light .card.group-3 { border-left: 4px solid var(--group-3); }
-body.theme-light .card.group-4 { border-left: 4px solid var(--group-4); }
-body.theme-light .card.group-5 { border-left: 4px solid var(--group-5); }
-body.theme-light .card.group-6 { border-left: 4px solid var(--group-6); }
-body.theme-light .card.group-7 { border-left: 4px solid var(--group-7); }
-
-/* TABELA */
+/* Główne kontenery */
+body.theme-light .app,
+body.theme-light .main,
+body.theme-light .cards-container,
 body.theme-light .table-container {
-  background: #ffffff;
-  border-color: var(--border);
-}
-
-body.theme-light table.dataTable {
-  color: var(--text);
-}
-
-body.theme-light table.dataTable thead th {
-  background: #ffffff;
-  border-bottom: 1px solid var(--border);
-}
-
-/* BANNER SW */
-body.theme-light .ios-banner {
-  background: rgba(255, 255, 255, 0.7);
-  color: #1e293b;
-  border-color: rgba(0, 0, 0, 0.1);
-}
-
-body.theme-light .ios-banner-btn {
-  background: rgba(59, 130, 246, 0.15);
-  border-color: rgba(59, 130, 246, 0.4);
-  color: #2563eb;
-}
-
-/* MOBILE MENU BUTTON */
-body.theme-light #mobileMenuBtn {
-  background: rgba(255, 255, 255, 0.9);
-  color: #475569;
-  border-color: var(--border);
-}
-
-body.theme-light #mobileMenuBtn.circle {
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
-}
-
-/* OVERLAY */
-body.theme-light .app-overlay.show {
-  background: rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(4px);
-}
-
-/* INPUTY, SELECTY, BUTTONY */
-body.theme-light select,
-body.theme-light button,
-body.theme-light input[type="date"] {
-  background: #ffffff;
-  border-color: var(--border);
-  color: var(--text);
-}
-
-body.theme-light select:focus,
-body.theme-light input[type="date"]:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.4);
-}
-
-/* STATUS BOX */
-body.theme-light .status-box {
-  color: var(--text-soft);
-  border-top-color: var(--border);
-}
-
-body.theme-light .status-pill {
-  background: #f1f5f9;
-  border-color: var(--border);
-}
-
-/* NO DATA BOX */
-body.theme-light .no-data {
-  background: #ffffff;
-  border-color: var(--border);
-  color: var(--text-soft);
-}
-/* ============================================
-   UZUPEŁNIENIE JASNEGO MOTYWU – GLOBALNE TŁA
-   ============================================ */
-
-/* Główne tło aplikacji */
-body.theme-light {
-  background: var(--bg);
-}
-
-/* Kontener aplikacji */
-body.theme-light .app {
-  background: var(--bg);
-}
-
-/* Główna kolumna */
-body.theme-light .main {
-  background: var(--bg);
-}
-
-/* Sekcja filtrów */
-body.theme-light .filter-section {
-  background: var(--bg-soft);
-  border-color: var(--border);
-}
-
-/* Bloki dni */
-body.theme-light .day-block {
-  background: var(--bg-soft);
-  border-color: var(--border);
-}
-
-/* Karty */
-body.theme-light .card {
-  background: var(--bg-soft);
-  border-color: var(--border);
+  background: var(--bg) !important;
 }
 
 /* Sidebar */
 body.theme-light .sidebar {
-  background: var(--bg-soft);
-  border-right-color: var(--border);
+  background: var(--bg-soft) !important;
+  border-right-color: var(--border) !important;
 }
 
-/* Kontener tabeli */
-body.theme-light .table-container {
-  background: var(--bg-soft);
-  border-color: var(--border);
+/* Filtry */
+body.theme-light .filter-section {
+  background: var(--bg-soft) !important;
+  border-color: var(--border) !important;
 }
 
-/* No data box */
-body.theme-light .no-data {
-  background: var(--bg-soft);
-  border-color: var(--border);
+/* Bloki dni */
+body.theme-light .day-block {
+  background: var(--bg-soft) !important;
+  border-color: var(--border) !important;
 }
 
-/* Separator <hr> */
+/* Karty */
+body.theme-light .card {
+  background: var(--bg-soft) !important;
+  border-color: var(--border) !important;
+}
+
+/* Meta tagi */
+body.theme-light .card-meta span {
+  background: var(--bg-softer) !important;
+  border-color: var(--border) !important;
+}
+
+/* Separator */
 body.theme-light hr {
-  border-color: var(--border);
+  border-color: var(--border) !important;
 }
 
-/* Przyciski widoku, daty, selecty */
+/* No data */
+body.theme-light .no-data {
+  background: var(--bg-soft) !important;
+  border-color: var(--border) !important;
+}
+
+/* Tabela */
+body.theme-light table.dataTable,
+body.theme-light table.dataTable tbody tr,
+body.theme-light table.dataTable thead th {
+  background: var(--bg-soft) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+
+/* Inputy, selecty, przyciski */
 body.theme-light select,
 body.theme-light button,
 body.theme-light input[type="date"] {
-  background: var(--bg-soft);
-  border-color: var(--border);
-  color: var(--text);
+  background: var(--bg-soft) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
 }
 
-/* Hover i focus */
+/* Hover / focus */
 body.theme-light select:focus,
 body.theme-light input[type="date"]:focus,
 body.theme-light button:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent-soft);
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 1px var(--accent-soft) !important;
 }
+
+/* Mobile menu button */
+body.theme-light #mobileMenuBtn {
+  background: var(--bg-soft) !important;
+  color: var(--text-soft) !important;
+  border-color: var(--border) !important;
+}
+
+/* Overlay */
+body.theme-light .app-overlay.show {
+  background: rgba(0, 0, 0, 0.1) !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+/* Banner SW */
+body.theme-light .ios-banner {
+  background: rgba(255, 255, 255, 0.8) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+
+body.theme-light .ios-banner-btn {
+  background: var(--accent-soft) !important;
+  border-color: var(--accent) !important;
+  color: var(--accent) !important;
+}
+
 
 
 
