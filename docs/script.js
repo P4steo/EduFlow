@@ -35,8 +35,8 @@ function setDotError() {
   dot.classList.add("error");
 }
 
-/* FETCH + RETRY */
-async function fetchPlanWithRetry(retries = 5, delay = 1500) {
+/* FETCH + RETRY – krócej i łagodniej */
+async function fetchPlanWithRetry(retries = 2, delay = 1200) {
   for (let i = 0; i < retries; i++) {
     try {
       const res = await fetch(`${_URL}?tok=${currentTok}&_=${Date.now()}`);
@@ -46,38 +46,41 @@ async function fetchPlanWithRetry(retries = 5, delay = 1500) {
         lastTimestamp = json.timestamp;
         return json.data;
       }
-    } catch (e) {}
+    } catch (e) {
+      // ciche ponawianie
+    }
 
     await new Promise(resolve => setTimeout(resolve, delay));
   }
   return null;
 }
+
 async function loadData() {
   const cacheKey = "cachedPlan_" + currentTok;
   const cacheTimeKey = "cachedPlanTimestamp_" + currentTok;
 
-  const maxAge = 1000 * 60 * 60 * 6;
+  const maxAge = 1000 * 60 * 60 * 6; // 6h
 
   const cached = localStorage.getItem(cacheKey);
   const cachedTime = Number(localStorage.getItem(cacheTimeKey));
 
-  // OFFLINE → użyj cache lub data.json
+  // 1. Najpierw: jeśli cache jest świeży → użyj od razu (instant load)
+  if (cached && cachedTime && Date.now() - cachedTime < maxAge) {
+    lastTimestamp = cachedTime / 1000;
+    return JSON.parse(cached);
+  }
+
+  // 2. Jeśli jesteśmy offline → użyj cache (nawet starego) lub data.json
   if (!navigator.onLine) {
     if (cached) {
-      lastTimestamp = Number(cachedTime) / 1000;
+      lastTimestamp = Number(cachedTime) / 1000 || null;
       return JSON.parse(cached);
     }
     const local = await fetch("data.json");
     return await local.json();
   }
 
-  // CACHE WAŻNY
-  if (cached && cachedTime && Date.now() - cachedTime < maxAge) {
-    lastTimestamp = cachedTime / 1000;
-    return JSON.parse(cached);
-  }
-
-  // API
+  // 3. Spróbuj pobrać z API (krótszy retry)
   const apiData = await fetchPlanWithRetry();
 
   if (apiData) {
@@ -88,19 +91,19 @@ async function loadData() {
     return apiData;
   }
 
-  // API padło → użyj cache
+  // 4. API padło → użyj cache, jeśli cokolwiek jest
   if (cached) {
-    lastTimestamp = cachedTime / 1000;
+    lastTimestamp = cachedTime ? cachedTime / 1000 : null;
     return JSON.parse(cached);
   }
 
-  // Ostateczny fallback
+  // 5. Ostateczny fallback
   const local = await fetch("data.json");
   return await local.json();
 }
 
 
-// === NOWE FUNKCJE WEEKENDOWE ===
+// === WEEKEND HELPERS ===
 
 // Pobiera unikalne daty z fullData i sortuje
 function getSortedUniqueDates() {
@@ -156,7 +159,7 @@ function findNearestWeekendRange() {
   const today = new Date();
   const todayMid = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
-  // 🟢 FIX: jeśli dziś jest niedziela i istnieje weekend z tą niedzielą → zwróć go
+  // jeśli dziś jest niedziela i istnieje weekend z tą niedzielą → zwróć go
   if (today.getDay() === 0) { // 0 = niedziela
     const todayStr = today.toISOString().split("T")[0].replace(/-/g, ".");
     const current = ranges.find(r => r.sun === todayStr);
@@ -173,7 +176,6 @@ function findNearestWeekendRange() {
   return future || ranges[0];
 }
 
-
 // Następny weekend po aktualnym
 function findNextWeekendRange(currentRange) {
   const ranges = buildWeekendRanges();
@@ -189,6 +191,7 @@ function findNextWeekendRange(currentRange) {
 
   return ranges[idx + 1] || ranges[ranges.length - 1];
 }
+
 
 
 
@@ -210,7 +213,8 @@ function filterByDateMode() {
       `Najbliższy zjazd: ${nearest.sat} – ${nearest.sun}`;
 
     return fullData.filter(item =>
-      item.data && (item.data.includes(nearest.sat) || item.data.includes(nearest.sun))
+      item.data &&
+      (item.data.includes(nearest.sat) || item.data.includes(nearest.sun))
     );
   }
 
@@ -221,7 +225,8 @@ function filterByDateMode() {
       `Następny zjazd: ${next.sat} – ${next.sun}`;
 
     return fullData.filter(item =>
-      item.data && (item.data.includes(next.sat) || item.data.includes(next.sun))
+      item.data &&
+      (item.data.includes(next.sat) || item.data.includes(next.sun))
     );
   }
 
@@ -277,12 +282,10 @@ function updateGroupFilter() {
 /* RENDERING */
 function updateNoDataMessage() {
   const msg = document.getElementById("noDataMessage");
-  if (!filteredData || filteredData.length === 0) {
-    msg.style.display = "block";
-    msg.textContent = "Brak zajęć w wybranym zakresie.";
-  } else {
-    msg.style.display = "none";
-  }
+  const empty = !filteredData || filteredData.length === 0;
+
+  msg.style.display = empty ? "block" : "none";
+  if (empty) msg.textContent = "Brak zajęć w wybranym zakresie.";
 }
 
 function applyAllFilters() {
@@ -291,30 +294,27 @@ function applyAllFilters() {
   if (currentDateMode === "custom") {
     const s = document.getElementById("startDate").value;
     const e = document.getElementById("endDate").value;
-    if (s && e) {
-      base = filterByCustomDates(s, e);
-    } else {
-      base = fullData.slice();
-    }
+    base = (s && e) ? filterByCustomDates(s, e) : fullData.slice();
   } else {
     base = filterByDateMode();
   }
 
-  base = applyGroupFilter(base);
-
-  filteredData = base;
+  filteredData = applyGroupFilter(base);
   updateNoDataMessage();
   render();
 }
 
 function render() {
+  const cards = document.getElementById("cardsContainer");
+  const tableWrap = document.getElementById("tableContainer");
+
   if (currentView === "cards") {
-    document.getElementById("cardsContainer").style.display = "flex";
-    document.getElementById("tableContainer").style.display = "none";
+    cards.style.display = "flex";
+    tableWrap.style.display = "none";
     renderCards();
   } else {
-    document.getElementById("cardsContainer").style.display = "none";
-    document.getElementById("tableContainer").style.display = "block";
+    cards.style.display = "none";
+    tableWrap.style.display = "block";
     $('#planTable').DataTable().columns.adjust();
     renderTable();
   }
@@ -322,22 +322,22 @@ function render() {
 
 function groupByDate(data) {
   const map = {};
-  data.forEach(item => {
+
+  for (const item of data) {
     if (!map[item.data]) map[item.data] = [];
     map[item.data].push(item);
-  });
-  return Object.entries(map).sort((a, b) => new Date(a[0]) - new Date(b[0]));
+  }
+
+  return Object.entries(map).sort(
+    (a, b) => new Date(a[0]) - new Date(b[0])
+  );
 }
 
 function parseTime(t) {
   if (!t || typeof t !== "string") return NaN;
-  const parts = t.split(":").map(s => s.trim());
-  const h = Number(parts[0] || 0);
-  const m = Number(parts[1] || 0);
-  if (!Number.isFinite(h) || !Number.isFinite(m)) return NaN;
-  return h * 60 + m;
+  const [h, m] = t.split(":").map(Number);
+  return Number.isFinite(h) && Number.isFinite(m) ? h * 60 + m : NaN;
 }
-
 
 function renderCards() {
   const now = new Date();
@@ -365,26 +365,21 @@ function renderCards() {
     title.textContent = dateStr;
     dayBlock.appendChild(title);
 
-    // szybkie sortowanie po minutach
+    // sortowanie po czasie i grupie
     items.sort((a, b) => {
       const t1 = parseTime(a.od);
       const t2 = parseTime(b.od);
-      if (t1 !== t2) return t1 - t2;
-      return (a.group_code || "").localeCompare(b.group_code || "");
+      return t1 !== t2 ? t1 - t2 : (a.group_code || "").localeCompare(b.group_code || "");
     });
 
     items.forEach(item => {
       const card = document.createElement("div");
       card.className = "card";
 
-      if (item.group_code) {
-        card.classList.add(`group-${item.group_code}`);
-      }
+      if (item.group_code) card.classList.add(`group-${item.group_code}`);
 
       const uwagiLower = ((item.uwagi || "") + " " + (item.zaliczenie || "")).toLowerCase();
-      if (uwagiLower.includes("odwołane")) {
-        card.classList.add("cancelled");
-      }
+      if (uwagiLower.includes("odwołane")) card.classList.add("cancelled");
 
       const top = document.createElement("div");
       top.className = "card-top";
@@ -404,11 +399,9 @@ function renderCards() {
       const meta = document.createElement("div");
       meta.className = "card-meta";
 
-      if (!item.group_code) {
-        meta.innerHTML += `<span>Wykład</span>`;
-      } else {
-        meta.innerHTML += `<span>Grupa ${item.group_code}</span>`;
-      }
+      meta.innerHTML += item.group_code
+        ? `<span>Grupa ${item.group_code}</span>`
+        : `<span>Wykład</span>`;
 
       if (item.sala) meta.innerHTML += `<span>${item.sala}</span>`;
       if (item.prowadzacy) meta.innerHTML += `<span>${item.prowadzacy}</span>`;
@@ -418,22 +411,17 @@ function renderCards() {
       const uwagiParts = [];
       if (item.zaliczenie) uwagiParts.push(item.zaliczenie);
       if (item.uwagi && item.uwagi.toLowerCase() !== "brak") uwagiParts.push(item.uwagi);
-      const uwagiDisplay = uwagiParts.join(", ");
 
-      if (uwagiDisplay) {
+      if (uwagiParts.length) {
         const uw = document.createElement("div");
         uw.className = "card-uwagi";
-        uw.textContent = uwagiDisplay;
+        uw.textContent = uwagiParts.join(", ");
         card.appendChild(uw);
       }
 
-      // szybkie podświetlanie
       const start = parseTime(item.od);
       const end = parseTime(item.do);
-
-      if (nowMinutes >= start && nowMinutes <= end) {
-        card.classList.add("now");
-      }
+      if (nowMinutes >= start && nowMinutes <= end) card.classList.add("now");
 
       dayBlock.appendChild(card);
     });
@@ -444,19 +432,16 @@ function renderCards() {
   container.appendChild(frag);
 }
 
-
 function renderTable() {
   const rows = filteredData
     .sort((a, b) => {
       const d1 = new Date(a.data.replace(/\./g, "-"));
       const d2 = new Date(b.data.replace(/\./g, "-"));
-      const diffDate = d1 - d2;
-      if (diffDate !== 0) return diffDate;
+      if (d1 - d2 !== 0) return d1 - d2;
 
       const t1 = new Date(`2000-01-01T${a.od}:00`);
       const t2 = new Date(`2000-01-01T${b.od}:00`);
-      const diffTime = t1 - t2;
-      if (diffTime !== 0) return diffTime;
+      if (t1 - t2 !== 0) return t1 - t2;
 
       return (a.group_code || "").localeCompare(b.group_code || "");
     })
@@ -464,7 +449,6 @@ function renderTable() {
       const uwagiParts = [];
       if (item.zaliczenie) uwagiParts.push(item.zaliczenie);
       if (item.uwagi && item.uwagi.toLowerCase() !== "brak") uwagiParts.push(item.uwagi);
-      const uwagiDisplay = uwagiParts.join(", ");
 
       return [
         item.data,
@@ -474,7 +458,7 @@ function renderTable() {
         item.przedmiot,
         item.sala,
         item.prowadzacy,
-        uwagiDisplay
+        uwagiParts.join(", ")
       ];
     });
 
@@ -495,9 +479,8 @@ function renderTable() {
       language: {
         url: "https://cdn.datatables.net/plug-ins/2.1.8/i18n/pl.json"
       },
-      createdRow: function (row, data) {
-        const uwagi = (data[7] || "").toLowerCase();
-        if (uwagi.includes("odwołane")) {
+      createdRow: (row, data) => {
+        if ((data[7] || "").toLowerCase().includes("odwołane")) {
           row.classList.add("cancelled");
         }
       }
@@ -508,6 +491,7 @@ function renderTable() {
     table.draw();
   }
 }
+
 /* INIT */
 async function init() {
   const savedTok = localStorage.getItem("lastSpecTok");
@@ -516,16 +500,15 @@ async function init() {
     document.getElementById("specSelect").value = savedTok;
   }
 
-
   setDotLoading();
-  document.getElementById("noDataMessage").textContent = "Ładowanie danych…";
-  document.getElementById("noDataMessage").style.display = "block";
+  const msg = document.getElementById("noDataMessage");
+  msg.textContent = "Ładowanie danych…";
+  msg.style.display = "block";
 
   const data = await loadData();
 
   if (!data) {
-    document.getElementById("noDataMessage").textContent =
-      "Brak danych z serwera. Spróbuj ponownie.";
+    msg.textContent = "Brak danych z serwera. Spróbuj ponownie.";
     setDotError();
     return;
   }
@@ -536,7 +519,7 @@ async function init() {
     "Dane zaktualizowano: " +
     new Date(lastTimestamp * 1000).toLocaleString("pl-PL");
 
-  document.getElementById("noDataMessage").style.display = "none";
+  msg.style.display = "none";
 
   updateGroupFilter();
   applyAllFilters();
@@ -546,9 +529,8 @@ async function init() {
 /* EVENTS */
 document.getElementById("specSelect").addEventListener("change", async e => {
   currentTok = e.target.value;
-
   localStorage.setItem("lastSpecTok", currentTok);
-  // pobierz cache dla tej specjalizacji
+
   const cacheKey = "cachedPlan_" + currentTok;
   const cacheTimeKey = "cachedPlanTimestamp_" + currentTok;
 
@@ -556,7 +538,7 @@ document.getElementById("specSelect").addEventListener("change", async e => {
   const cachedTime = Number(localStorage.getItem(cacheTimeKey));
 
   if (cached && cachedTime) {
-    // używamy danych z cache — bez spinnera, bez ładowania
+    // szybkie przełączenie specjalizacji bez spinnera
     fullData = JSON.parse(cached);
     lastTimestamp = cachedTime / 1000;
 
@@ -565,10 +547,9 @@ document.getElementById("specSelect").addEventListener("change", async e => {
     return;
   }
 
-  // jeśli nie ma cache → dopiero wtedy pełne ładowanie
+  // brak cache → pełne ładowanie
   init();
 });
-
 
 document.getElementById("groupSelect").addEventListener("change", e => {
   currentGroup = e.target.value;
@@ -579,9 +560,11 @@ document.querySelectorAll(".date-mode-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".date-mode-btn").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
+
     currentDateMode = btn.dataset.mode;
     document.getElementById("customDates").style.display =
       currentDateMode === "custom" ? "flex" : "none";
+
     applyAllFilters();
   });
 });
@@ -600,15 +583,16 @@ document.getElementById("viewCards").addEventListener("click", () => {
 
 document.getElementById("reloadBtn").addEventListener("click", async () => {
   setDotLoading();
+
+  const msg = document.getElementById("noDataMessage");
+  msg.style.display = "block";
+  msg.textContent = "Ładowanie danych…";
   document.getElementById("statusBox").textContent = "Odświeżanie…";
-  document.getElementById("noDataMessage").style.display = "block";
-  document.getElementById("noDataMessage").textContent = "Ładowanie danych…";
 
   const data = await fetchPlanWithRetry();
 
   if (!data) {
-    document.getElementById("noDataMessage").textContent =
-      "Brak danych z serwera. Spróbuj ponownie.";
+    msg.textContent = "Brak danych z serwera. Spróbuj ponownie.";
     setDotError();
 
     fullData = [];
@@ -633,12 +617,10 @@ document.getElementById("reloadBtn").addEventListener("click", async () => {
   setDotLoaded();
 });
 
-
 /* MOBILE MENU — FIXED */
 const mobileBtn = document.getElementById("mobileMenuBtn");
 const sidebar = document.querySelector(".sidebar");
 
-// centralny stan
 let sidebarOpen = false;
 
 // overlay
@@ -646,7 +628,6 @@ const overlay = document.createElement("div");
 overlay.className = "app-overlay";
 document.body.insertBefore(overlay, document.body.firstChild);
 
-// funkcja sterująca
 function setSidebarOpen(open) {
   sidebarOpen = !!open;
 
@@ -661,17 +642,14 @@ function setSidebarOpen(open) {
   }
 }
 
-// kliknięcie przycisku
-mobileBtn.addEventListener("click", (e) => {
+mobileBtn.addEventListener("click", e => {
   e.stopPropagation();
   setSidebarOpen(!sidebarOpen);
 });
 
-// kliknięcie overlay
 overlay.addEventListener("click", () => setSidebarOpen(false));
 
-// kliknięcie poza sidebar
-document.addEventListener("click", (e) => {
+document.addEventListener("click", e => {
   if (window.innerWidth > 768) return;
   if (!sidebar.contains(e.target) && e.target !== mobileBtn) {
     setSidebarOpen(false);
@@ -687,7 +665,6 @@ document.addEventListener("click", (e) => {
   });
 });
 
-// tryb mobilny
 function updateMobileMode() {
   if (window.innerWidth <= 768) {
     mobileBtn.style.display = "block";
@@ -701,35 +678,48 @@ window.addEventListener("resize", updateMobileMode);
 updateMobileMode();
 
 
+
 /* START */
 init();
 
-// ===============================
-// BANER – aktualizacja aplikacji (UI)
-// ===============================
+/* ===============================
+   BANER – aktualizacja aplikacji (UI)
+   =============================== */
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./sw.js?v=4.0.3")
+      .register("./sw.js?v=4.0.4")
       .then(reg => {
         reg.addEventListener("updatefound", () => {
           const newWorker = reg.installing;
           if (!newWorker) return;
 
           newWorker.addEventListener("statechange", () => {
-            if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
-              document.getElementById("iosUpdateBanner").classList.add("show");
+            const isInstalled = newWorker.state === "installed";
+            const hasController = navigator.serviceWorker.controller;
+
+            if (isInstalled && hasController) {
+              const banner = document.getElementById("iosUpdateBanner");
+              if (banner) banner.classList.add("show");
             }
           });
         });
+      })
+      .catch(() => {
+        // ciche pominięcie błędu SW – aplikacja działa dalej
       });
   });
 }
 
-// kliknięcie w "Odśwież" — musi poczekać aż DOM się załaduje
+/* Kliknięcie w "Odśwież" */
 window.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("iosRefreshBtn").addEventListener("click", () => {
-    document.getElementById("iosUpdateBanner").classList.remove("show");
+  const btn = document.getElementById("iosRefreshBtn");
+  if (!btn) return;
+
+  btn.addEventListener("click", () => {
+    const banner = document.getElementById("iosUpdateBanner");
+    if (banner) banner.classList.remove("show");
     window.location.reload();
   });
 });
+
