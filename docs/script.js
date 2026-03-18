@@ -701,43 +701,66 @@ themeToggle.addEventListener("click", () => {
 init();
 
 /* ===============================
-   BANER – aktualizacja aplikacji (UI)
+   SERVICE WORKER – pełna obsługa aktualizacji
    =============================== */
+
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker
-      .register("./sw.js?v=4.1.4")
-      .then(reg => {
-        reg.addEventListener("updatefound", () => {
-          const newWorker = reg.installing;
-          if (!newWorker) return;
+    navigator.serviceWorker.register("./sw.js").then(reg => {
 
-          newWorker.addEventListener("statechange", () => {
-            const isInstalled = newWorker.state === "installed";
-            const hasController = navigator.serviceWorker.controller;
+      // 1. Jeśli SW już czeka → pokaż banner
+      if (reg.waiting) {
+        showUpdateBanner();
+      }
 
-            if (isInstalled && hasController) {
-              const banner = document.getElementById("iosUpdateBanner");
-              if (banner) banner.classList.add("show");
-            }
-          });
+      // 2. Wykrywanie nowej instalacji
+      reg.addEventListener("updatefound", () => {
+        const newWorker = reg.installing;
+        if (!newWorker) return;
+
+        newWorker.addEventListener("statechange", () => {
+          if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+            showUpdateBanner();
+          }
         });
-      })
-      .catch(() => {
-        // ciche pominięcie błędu SW – aplikacja działa dalej
       });
+    });
+  });
+
+  // 3. Odbieranie komunikatów z SW
+  navigator.serviceWorker.addEventListener("message", event => {
+    if (event.data?.type === "NEW_VERSION_AVAILABLE") {
+      showUpdateBanner();
+    }
   });
 }
 
-/* Kliknięcie w "Odśwież" */
-window.addEventListener("DOMContentLoaded", () => {
-  const btn = document.getElementById("iosRefreshBtn");
-  if (!btn) return;
+/* ===============================
+   FUNKCJA AKTUALIZACJI
+   =============================== */
+function updateApp() {
+  navigator.serviceWorker.getRegistration().then(reg => {
+    if (reg.waiting) {
+      reg.waiting.postMessage({ type: "SKIP_WAITING" });
 
-  btn.addEventListener("click", () => {
-    const banner = document.getElementById("iosUpdateBanner");
-    if (banner) banner.classList.remove("show");
-    window.location.reload();
+      setTimeout(() => {
+        window.location.reload();
+      }, 150);
+    }
   });
-});
+}
 
+/* ===============================
+   POKAZYWANIE BANERA
+   =============================== */
+function showUpdateBanner() {
+  const banner = document.getElementById("iosUpdateBanner");
+  if (!banner) return;
+
+  banner.classList.add("show");
+
+  const btn = document.getElementById("iosRefreshBtn");
+  if (btn) {
+    btn.onclick = () => updateApp();
+  }
+}
