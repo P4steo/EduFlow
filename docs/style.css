@@ -10,6 +10,8 @@
       --danger: #f97373;
     }
 
+    
+
     * {
       box-sizing: border-box;
     }
@@ -563,6 +565,32 @@ body.no-scroll {
   gap: 8px;
   flex-wrap: nowrap;
 }
+/* ============================================
+   JASNY PASTEL — NOWY, KOLOROWY MOTYW
+   ============================================ */
+
+body.theme-light {
+  --bg: #fdfcff;
+  --bg-soft: #ffffff;
+  --bg-softer: #faf7ff;
+
+  --accent: #7c3aed;
+  --accent-soft: rgba(124, 58, 237, 0.15);
+
+  --text: #2d1b4e;
+  --text-soft: #6b5a8e;
+
+  --border: #e5d9ff;
+  --danger: #ef4444;
+
+  --group-1: #ff9aa2;
+  --group-2: #a0c4ff;
+  --group-3: #b9fbc0;
+  --group-4: #cdb4db;
+  --group-5: #ffdac1;
+  --group-6: #caffbf;
+  --group-7: #ffb3c6;
+}
 
 /* ============================================
    PEŁNE NADPISANIE CIEMNYCH ELEMENTÓW W LIGHT MODE
@@ -672,6 +700,22 @@ body.theme-light .ios-banner-btn {
   border-color: var(--accent) !important;
   color: var(--accent) !important;
 }
+
+/* TWARDE NADPISANIE */
+body.theme-light {
+  background: var(--bg) !important;
+  background-image: none !important;
+}
+
+body.theme-light .sidebar {
+  background-image: none !important;
+}
+
+body.theme-light .card {
+  background-color: var(--bg-soft) !important;
+}
+
+
 
 
 
