@@ -127,7 +127,7 @@ Zero chaosu — tylko szybki dostęp do tego, co naprawdę ważne.
 
 - 🔔 Powiadomienia o zmianach  
 - 📆 Eksport do ICS  
-- 🌓 Tryb jasny / ciemny  
+- ~~🌓 Tryb jasny / ciemny~~  DONE ✅
 - 🔍 Wyszukiwanie po przedmiotach  
 - 🧪 Testy jednostkowe i e2e  
 
