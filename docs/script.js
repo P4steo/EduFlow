@@ -761,6 +761,10 @@ function showUpdateBanner() {
 
   const btn = document.getElementById("iosRefreshBtn");
   if (btn) {
-    btn.onclick = () => updateApp();
+    btn.onclick = () => {
+      banner.classList.remove("show"); // ← natychmiast znika
+      updateApp();                     // ← aktywacja nowego SW
+    };
   }
 }
+
