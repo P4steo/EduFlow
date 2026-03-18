@@ -672,7 +672,7 @@ body.theme-light select:focus,
 body.theme-light input[type="date"]:focus,
 body.theme-light button:focus {
   border-color: var(--accent) !important;
-  box-shadow: 0 0 0 1px var(--accent-soft) !important;
+  box-shadow: 0 0 0 2px var(--accent-soft) !important;
 }
 
 /* Mobile menu button */
@@ -715,6 +715,17 @@ body.theme-light .card {
   background-color: var(--bg-soft) !important;
 }
 
+/* ============================================
+   WYRAZISTE KOLORY GRUP W JASNYM MOTYWIE
+   ============================================ */
+
+body.theme-light .card.group-1 { border-left: 6px solid #ff4d5e !important; }
+body.theme-light .card.group-2 { border-left: 6px solid #4d9bff !important; }
+body.theme-light .card.group-3 { border-left: 6px solid #2ecc71 !important; }
+body.theme-light .card.group-4 { border-left: 6px solid #9b59b6 !important; }
+body.theme-light .card.group-5 { border-left: 6px solid #ff9f43 !important; }
+body.theme-light .card.group-6 { border-left: 6px solid #1abc9c !important; }
+body.theme-light .card.group-7 { border-left: 6px solid #ff6fae !important; }
 
 
 
