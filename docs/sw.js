@@ -1,4 +1,4 @@
-const SW_VERSION = "v4.1.5";
+const SW_VERSION = "v4.1.6";
 const CACHE_NAME = `static-${SW_VERSION}`;
 
 const STATIC_ASSETS = [
