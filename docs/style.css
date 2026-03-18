@@ -707,6 +707,83 @@ body.theme-light .no-data {
   border-color: var(--border);
   color: var(--text-soft);
 }
+/* ============================================
+   UZUPEŁNIENIE JASNEGO MOTYWU – GLOBALNE TŁA
+   ============================================ */
+
+/* Główne tło aplikacji */
+body.theme-light {
+  background: var(--bg);
+}
+
+/* Kontener aplikacji */
+body.theme-light .app {
+  background: var(--bg);
+}
+
+/* Główna kolumna */
+body.theme-light .main {
+  background: var(--bg);
+}
+
+/* Sekcja filtrów */
+body.theme-light .filter-section {
+  background: var(--bg-soft);
+  border-color: var(--border);
+}
+
+/* Bloki dni */
+body.theme-light .day-block {
+  background: var(--bg-soft);
+  border-color: var(--border);
+}
+
+/* Karty */
+body.theme-light .card {
+  background: var(--bg-soft);
+  border-color: var(--border);
+}
+
+/* Sidebar */
+body.theme-light .sidebar {
+  background: var(--bg-soft);
+  border-right-color: var(--border);
+}
+
+/* Kontener tabeli */
+body.theme-light .table-container {
+  background: var(--bg-soft);
+  border-color: var(--border);
+}
+
+/* No data box */
+body.theme-light .no-data {
+  background: var(--bg-soft);
+  border-color: var(--border);
+}
+
+/* Separator <hr> */
+body.theme-light hr {
+  border-color: var(--border);
+}
+
+/* Przyciski widoku, daty, selecty */
+body.theme-light select,
+body.theme-light button,
+body.theme-light input[type="date"] {
+  background: var(--bg-soft);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+/* Hover i focus */
+body.theme-light select:focus,
+body.theme-light input[type="date"]:focus,
+body.theme-light button:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent-soft);
+}
+
 
 
 
