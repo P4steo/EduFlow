@@ -708,10 +708,17 @@ function applyTheme() {
 applyTheme();
 
 themeToggle.addEventListener("click", () => {
+  document.body.classList.add("theme-fade");
+
   const current = localStorage.getItem("theme") || "dark";
   const next = current === "dark" ? "light" : "dark";
   localStorage.setItem("theme", next);
+
   applyTheme();
+
+  setTimeout(() => {
+    document.body.classList.remove("theme-fade");
+  }, 250);
 });
 
 
