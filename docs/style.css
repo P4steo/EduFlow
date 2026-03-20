@@ -23,6 +23,18 @@ body {
   display: flex;
   flex-direction: column;
 }
+/* Delikatny fade przy zmianie motywu */
+body {
+  transition:
+    background-color 0.35s ease,
+    color 0.35s ease,
+    opacity 0.25s ease;
+}
+
+.theme-fade {
+  opacity: 0.4;
+  transition: opacity 0.25s ease;
+}
 
 .app {
   display: flex;
