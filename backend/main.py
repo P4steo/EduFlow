@@ -46,7 +46,10 @@ def fetch_html(tok: str):
     })
 
     # wejście na stronę, żeby ustawić cookies
-    s.get(URL_PAGE)
+    try:
+        s.get(URL_PAGE, timeout=10)
+    except Exception as e:
+        print("Initial GET failed:", e)
 
     # próba wyciągnięcia zakresu semestru z cookies
     cookies = s.cookies.get_dict()
@@ -76,15 +79,20 @@ def fetch_html(tok: str):
         "id": tok,
     }
 
-    for _ in range(3):
-        r = s.post(URL_GRID, data=payload)
-        r.raise_for_status()
-        html = r.text
-        if "<td" in html.lower():
-            return html
-        time.sleep(1)
+    # retry 3 razy z timeoutem
+    for attempt in range(3):
+        try:
+            r = s.post(URL_GRID, data=payload, timeout=10)
+            r.raise_for_status()
+            html = r.text
+            if "<td" in html.lower():
+                return html
+        except Exception as e:
+            print(f"Fetch failed (attempt {attempt+1}/3): {e}")
+            time.sleep(1)
 
     return None
+
 
 
 def detect_group_column(html):
