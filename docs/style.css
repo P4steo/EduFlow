@@ -28,13 +28,13 @@ body {
   transition:
     background-color 0.35s ease,
     color 0.35s ease,
-    opacity 0.25s ease;
 }
 
 .theme-fade {
-  opacity: 0.4;
-  transition: opacity 0.25s ease;
+  opacity: 0.85;
+  transition: opacity 180ms ease;
 }
+
 
 .app {
   display: flex;
