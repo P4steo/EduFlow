@@ -500,31 +500,51 @@ async function init() {
     document.getElementById("specSelect").value = savedTok;
   }
 
-  setDotLoading();
-  const msg = document.getElementById("noDataMessage");
-  msg.textContent = "Ładowanie danych…";
-  msg.style.display = "block";
+  const cacheKey = "cachedPlan_" + currentTok;
+  const cacheTimeKey = "cachedPlanTimestamp_" + currentTok;
 
-  const data = await loadData();
+  const cached = localStorage.getItem(cacheKey);
+  const cachedTime = Number(localStorage.getItem(cacheTimeKey));
+
+  // 1. NATYCHMIASTOWE WYŚWIETLENIE PLANU Z CACHE (nawet starego)
+  if (cached) {
+    fullData = JSON.parse(cached);
+    lastTimestamp = cachedTime ? cachedTime / 1000 : null;
+
+    updateGroupFilter();
+    applyAllFilters();
+    setDotLoaded(); // zielona kropka
+  }
+
+  // 2. W TLE — pobranie nowych danych
+  refreshDataInBackground();
+}
+async function refreshDataInBackground() {
+  setDotLoading(); // niebieska kropka
+
+  const data = await fetchPlanWithRetry();
 
   if (!data) {
-    msg.textContent = "Brak danych z serwera. Spróbuj ponownie.";
-    setDotError();
+    setDotError(); // API padło, ale UI zostaje
     return;
   }
 
+  // zapisujemy nowe dane
   fullData = data;
+  localStorage.setItem("cachedPlan_" + currentTok, JSON.stringify(data));
+  localStorage.setItem("cachedPlanTimestamp_" + currentTok, Date.now());
+
+  lastTimestamp = Date.now() / 1000;
 
   document.getElementById("statusBox").textContent =
     "Dane zaktualizowano: " +
     new Date(lastTimestamp * 1000).toLocaleString("pl-PL");
 
-  msg.style.display = "none";
-
   updateGroupFilter();
   applyAllFilters();
-  setDotLoaded();
+  setDotLoaded(); // zielona kropka
 }
+
 
 /* EVENTS */
 document.getElementById("specSelect").addEventListener("change", async e => {
