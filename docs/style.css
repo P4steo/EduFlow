@@ -546,36 +546,33 @@ body.no-scroll {
   flex-wrap: nowrap;
 }
 /* ============================================
-   JASNY PASTEL — NOWY, KOLOROWY MOTYW
+   iOS LIGHT THEME — DELIKATNY, PASTEL, NIE OCZOJEBNY
    ============================================ */
 
 body.theme-light {
-  --bg: #fdfcff;
+  --bg: #f7f7f9;
   --bg-soft: #ffffff;
-  --bg-softer: #faf7ff;
+  --bg-softer: #f2f2f6;
 
-  --accent: #7c3aed;
-  --accent-soft: rgba(124, 58, 237, 0.15);
+  --accent: #5e5ce6; /* iOS pastelowy fiolet */
+  --accent-soft: rgba(94, 92, 230, 0.12);
 
-  --text: #2d1b4e;
-  --text-soft: #6b5a8e;
+  --text: #1c1c1e;
+  --text-soft: #6e6e73;
 
-  --border: #e5d9ff;
-  --danger: #ef4444;
+  --border: #d2d2d7;
+  --danger: #ff3b30;
 
-  --group-1: #ff9aa2;
-  --group-2: #a0c4ff;
-  --group-3: #b9fbc0;
-  --group-4: #cdb4db;
-  --group-5: #ffdac1;
-  --group-6: #caffbf;
-  --group-7: #ffb3c6;
+  --group-1: #ffd9dd;
+  --group-2: #dbe8ff;
+  --group-3: #dffbe5;
+  --group-4: #e9ddff;
+  --group-5: #ffe9d6;
+  --group-6: #ddfff7;
+  --group-7: #ffd6e8;
 }
 
-/* ============================================
-   PEŁNE NADPISANIE CIEMNYCH ELEMENTÓW W LIGHT MODE
-   ============================================ */
-
+/* TŁA */
 body.theme-light {
   background: var(--bg) !important;
   background-image: none !important;
@@ -588,50 +585,36 @@ body.theme-light .table-container {
   background: var(--bg) !important;
 }
 
+/* SIDEBAR */
 body.theme-light .sidebar {
   background: var(--bg-soft) !important;
-  background-image: none !important;
   border-right-color: var(--border) !important;
 }
 
-body.theme-light .filter-section {
-  background: var(--bg-soft) !important;
-  border-color: var(--border) !important;
-}
-
-body.theme-light .day-block {
-  background: var(--bg-soft) !important;
-  border-color: var(--border) !important;
-}
-
-body.theme-light .card {
-  background: var(--bg-soft) !important;
-  background-color: var(--bg-soft) !important;
-  border-color: var(--border) !important;
-}
-
-body.theme-light .card-meta span {
-  background: var(--bg-softer) !important;
-  border-color: var(--border) !important;
-}
-
-body.theme-light hr {
-  border-color: var(--border) !important;
-}
-
+/* BLOKI */
+body.theme-light .filter-section,
+body.theme-light .day-block,
+body.theme-light .card,
 body.theme-light .no-data {
   background: var(--bg-soft) !important;
   border-color: var(--border) !important;
 }
 
-body.theme-light table.dataTable,
-body.theme-light table.dataTable tbody tr,
-body.theme-light table.dataTable thead th {
-  background: var(--bg-soft) !important;
-  color: var(--text) !important;
+/* META TAGI */
+body.theme-light .card-meta span {
+  background: var(--bg-softer) !important;
   border-color: var(--border) !important;
 }
 
+/* TEKSTY */
+body.theme-light,
+body.theme-light table.dataTable,
+body.theme-light table.dataTable tbody tr,
+body.theme-light table.dataTable thead th {
+  color: var(--text) !important;
+}
+
+/* INPUTY */
 body.theme-light select,
 body.theme-light button,
 body.theme-light input[type="date"] {
@@ -647,19 +630,22 @@ body.theme-light button:focus {
   box-shadow: 0 0 0 2px var(--accent-soft) !important;
 }
 
+/* MOBILE MENU */
 body.theme-light #mobileMenuBtn {
   background: var(--bg-soft) !important;
   color: var(--text-soft) !important;
   border-color: var(--border) !important;
 }
 
+/* OVERLAY */
 body.theme-light .app-overlay.show {
-  background: rgba(0, 0, 0, 0.1) !important;
+  background: rgba(0, 0, 0, 0.08) !important;
   backdrop-filter: blur(4px) !important;
 }
 
+/* iOS BANNER */
 body.theme-light .ios-banner {
-  background: rgba(255, 255, 255, 0.8) !important;
+  background: rgba(255, 255, 255, 0.85) !important;
   color: var(--text) !important;
   border-color: var(--border) !important;
 }
@@ -670,26 +656,24 @@ body.theme-light .ios-banner-btn {
   color: var(--accent) !important;
 }
 
-/* ============================================
-   WYRAZISTE KOLORY GRUP W JASNYM MOTYWIE
-   ============================================ */
+/* KOLORY GRUP — PASTEL, NIE KRZYCZĄ */
+body.theme-light .card.group-1 { border-left: 6px solid #ffb3bd !important; }
+body.theme-light .card.group-2 { border-left: 6px solid #a7c4ff !important; }
+body.theme-light .card.group-3 { border-left: 6px solid #b8f5c2 !important; }
+body.theme-light .card.group-4 { border-left: 6px solid #d3c2ff !important; }
+body.theme-light .card.group-5 { border-left: 6px solid #ffd4a8 !important; }
+body.theme-light .card.group-6 { border-left: 6px solid #b8fff0 !important; }
+body.theme-light .card.group-7 { border-left: 6px solid #ffb3d6 !important; }
 
-body.theme-light .card.group-1 { border-left: 6px solid #ff3b47 !important; }
-body.theme-light .card.group-2 { border-left: 6px solid #3b82f6 !important; }
-body.theme-light .card.group-3 { border-left: 6px solid #22c55e !important; }
-body.theme-light .card.group-4 { border-left: 6px solid #8b5cf6 !important; }
-body.theme-light .card.group-5 { border-left: 6px solid #f59e0b !important; }
-body.theme-light .card.group-6 { border-left: 6px solid #14b8a6 !important; }
-body.theme-light .card.group-7 { border-left: 6px solid #ec4899 !important; }
+/* META TAGI GRUP — PASTEL */
+body.theme-light .card.group-1 .card-meta span { background: #ffecef !important; }
+body.theme-light .card.group-2 .card-meta span { background: #eef4ff !important; }
+body.theme-light .card.group-3 .card-meta span { background: #ecfff2 !important; }
+body.theme-light .card.group-4 .card-meta span { background: #f6f0ff !important; }
+body.theme-light .card.group-5 .card-meta span { background: #fff4e8 !important; }
+body.theme-light .card.group-6 .card-meta span { background: #eafffa !important; }
+body.theme-light .card.group-7 .card-meta span { background: #ffe6f2 !important; }
 
-/* Pastelowe tła meta-tagów */
-body.theme-light .card.group-1 .card-meta span { background: #ffe5e8 !important; }
-body.theme-light .card.group-2 .card-meta span { background: #e3f0ff !important; }
-body.theme-light .card.group-3 .card-meta span { background: #e4ffe9 !important; }
-body.theme-light .card.group-4 .card-meta span { background: #f3e8ff !important; }
-body.theme-light .card.group-5 .card-meta span { background: #fff1db !important; }
-body.theme-light .card.group-6 .card-meta span { background: #d9fff7 !important; }
-body.theme-light .card.group-7 .card-meta span { background: #ffe0ef !important; }
 
 /* ============================================
    FINALNE NADPISANIE KOLORÓW GRUP (DARK + LIGHT)
