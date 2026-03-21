@@ -26,13 +26,13 @@ body {
 /* Delikatny fade przy zmianie motywu */
 body {
   transition:
-    background-color 0.35s ease,
-    color 0.35s ease,
+    background-color 0.75s ease,
+    color 0.75s ease,
 }
 
 .theme-fade {
   opacity: 0.85;
-  transition: opacity 180ms ease;
+  transition: opacity 0.6s ease;
 }
 
 
