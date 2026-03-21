@@ -1,3 +1,7 @@
+/* ============================================
+   KONFIGURACJA
+   ============================================ */
+
 const _URL = "https://eduflow-qivy.onrender.com/plan";
 
 let fullData = [];
@@ -11,7 +15,10 @@ let currentGroup = "all";
 
 let lastTimestamp = null;
 
-/* KROPKA — FUNKCJE STANÓW */
+/* ============================================
+   KROPKA — STANY
+   ============================================ */
+
 function setDotLoading() {
   const dot = document.querySelector(".logo-dot");
   dot.classList.remove("loaded", "error", "idle");
@@ -35,7 +42,10 @@ function setDotError() {
   dot.classList.add("error");
 }
 
-/* FETCH + RETRY – krócej i łagodniej */
+/* ============================================
+   FETCH + RETRY
+   ============================================ */
+
 async function fetchPlanWithRetry(retries = 2, delay = 1200) {
   for (let i = 0; i < retries; i++) {
     try {
@@ -46,14 +56,16 @@ async function fetchPlanWithRetry(retries = 2, delay = 1200) {
         lastTimestamp = json.timestamp;
         return json.data;
       }
-    } catch (e) {
-      // ciche ponawianie
-    }
+    } catch (e) {}
 
-    await new Promise(resolve => setTimeout(resolve, delay));
+    await new Promise(r => setTimeout(r, delay));
   }
   return null;
 }
+
+/* ============================================
+   OFFLINE-FIRST: loadData()
+   ============================================ */
 
 async function loadData() {
   const cacheKey = "cachedPlan_" + currentTok;
@@ -64,23 +76,22 @@ async function loadData() {
   const cached = localStorage.getItem(cacheKey);
   const cachedTime = Number(localStorage.getItem(cacheTimeKey));
 
-  // 1. Najpierw: jeśli cache jest świeży → użyj od razu (instant load)
+  // 1. Instant load — jeśli cache świeży
   if (cached && cachedTime && Date.now() - cachedTime < maxAge) {
     lastTimestamp = cachedTime / 1000;
     return JSON.parse(cached);
   }
 
-  // 2. Jeśli jesteśmy offline → użyj cache (nawet starego) lub data.json
+  // 2. Offline → użyj cache (nawet starego)
   if (!navigator.onLine) {
     if (cached) {
-      lastTimestamp = Number(cachedTime) / 1000 || null;
+      lastTimestamp = cachedTime ? cachedTime / 1000 : null;
       return JSON.parse(cached);
     }
-    const local = await fetch("data.json");
-    return await local.json();
+    return []; // brak internetu i brak cache
   }
 
-  // 3. Spróbuj pobrać z API (krótszy retry)
+  // 3. API (retry)
   const apiData = await fetchPlanWithRetry();
 
   if (apiData) {
@@ -91,21 +102,19 @@ async function loadData() {
     return apiData;
   }
 
-  // 4. API padło → użyj cache, jeśli cokolwiek jest
+  // 4. API padło → użyj cache
   if (cached) {
     lastTimestamp = cachedTime ? cachedTime / 1000 : null;
     return JSON.parse(cached);
   }
 
-  // 5. Ostateczny fallback
-  const local = await fetch("data.json");
-  return await local.json();
+  // 5. Ostatecznie: brak danych
+  return [];
 }
+/* ============================================
+   WEEKEND HELPERS
+   ============================================ */
 
-
-// === WEEKEND HELPERS ===
-
-// Pobiera unikalne daty z fullData i sortuje
 function getSortedUniqueDates() {
   const cleaned = fullData
     .map(ev => ev.data?.split(" ")[0])
@@ -122,17 +131,15 @@ function getSortedUniqueDates() {
     .sort((a, b) => a.date - b.date);
 }
 
-// Buduje listę weekendów na podstawie faktycznych dat
 function buildWeekendRanges() {
   const dates = getSortedUniqueDates();
   const ranges = [];
 
   for (let i = 0; i < dates.length; i++) {
     const d = dates[i].date;
-    const day = d.getDay(); // 6 = sobota, 0 = niedziela
+    const day = d.getDay();
 
     if (day === 6) {
-      // sobota → sprawdzamy czy następny dzień to niedziela
       const next = dates[i + 1];
       const sun = new Date(d);
       sun.setDate(d.getDate() + 1);
@@ -151,7 +158,6 @@ function buildWeekendRanges() {
   return ranges;
 }
 
-// Najbliższy weekend z danych
 function findNearestWeekendRange() {
   const ranges = buildWeekendRanges();
   if (ranges.length === 0) return null;
@@ -159,14 +165,12 @@ function findNearestWeekendRange() {
   const today = new Date();
   const todayMid = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
-  // jeśli dziś jest niedziela i istnieje weekend z tą niedzielą → zwróć go
-  if (today.getDay() === 0) { // 0 = niedziela
+  if (today.getDay() === 0) {
     const todayStr = today.toISOString().split("T")[0].replace(/-/g, ".");
     const current = ranges.find(r => r.sun === todayStr);
     if (current) return current;
   }
 
-  // standardowe działanie
   const future = ranges.find(r => {
     const [y, m, d] = r.sat.split(".").map(Number);
     const sat = new Date(y, m - 1, d);
@@ -176,7 +180,6 @@ function findNearestWeekendRange() {
   return future || ranges[0];
 }
 
-// Następny weekend po aktualnym
 function findNextWeekendRange(currentRange) {
   const ranges = buildWeekendRanges();
   if (ranges.length === 0) return null;
@@ -192,10 +195,10 @@ function findNextWeekendRange(currentRange) {
   return ranges[idx + 1] || ranges[ranges.length - 1];
 }
 
+/* ============================================
+   FILTROWANIE
+   ============================================ */
 
-
-
-/* FILTERING */
 function filterByDateMode() {
   if (currentDateMode === "all") {
     document.getElementById("currentRangeLabel").textContent = "Cały semestr";
@@ -204,7 +207,7 @@ function filterByDateMode() {
 
   const nearest = findNearestWeekendRange();
   if (!nearest) {
-    document.getElementById("currentRangeLabel").textContent = "Brak zjazdów w danych";
+    document.getElementById("currentRangeLabel").textContent = "Brak zjazdów";
     return [];
   }
 
@@ -262,7 +265,6 @@ function applyGroupFilter(base) {
   });
 }
 
-/* GROUP FILTER UI */
 function updateGroupFilter() {
   const select = document.getElementById("groupSelect");
   const groups = new Set();
@@ -279,7 +281,10 @@ function updateGroupFilter() {
   });
 }
 
-/* RENDERING */
+/* ============================================
+   RENDEROWANIE
+   ============================================ */
+
 function updateNoDataMessage() {
   const msg = document.getElementById("noDataMessage");
   const empty = !filteredData || filteredData.length === 0;
@@ -303,7 +308,6 @@ function applyAllFilters() {
   updateNoDataMessage();
   render();
 }
-
 function render() {
   const cards = document.getElementById("cardsContainer");
   const tableWrap = document.getElementById("tableContainer");
@@ -365,7 +369,6 @@ function renderCards() {
     title.textContent = dateStr;
     dayBlock.appendChild(title);
 
-    // sortowanie po czasie i grupie
     items.sort((a, b) => {
       const t1 = parseTime(a.od);
       const t2 = parseTime(b.od);
@@ -491,8 +494,10 @@ function renderTable() {
     table.draw();
   }
 }
+/* ============================================
+   INIT + BACKGROUND REFRESH
+   ============================================ */
 
-/* INIT */
 async function init() {
   const savedTok = localStorage.getItem("lastSpecTok");
   if (savedTok) {
@@ -506,31 +511,41 @@ async function init() {
   const cached = localStorage.getItem(cacheKey);
   const cachedTime = Number(localStorage.getItem(cacheTimeKey));
 
-  // 1. NATYCHMIASTOWE WYŚWIETLENIE PLANU Z CACHE (nawet starego)
+  // Instant load z cache
   if (cached) {
     fullData = JSON.parse(cached);
     lastTimestamp = cachedTime ? cachedTime / 1000 : null;
 
     updateGroupFilter();
     applyAllFilters();
-    setDotLoaded(); // zielona kropka
+    setDotLoaded();
+  } else {
+    fullData = [];
+    updateGroupFilter();
+    applyAllFilters();
   }
 
-  // 2. W TLE — pobranie nowych danych
   refreshDataInBackground();
 }
+
 async function refreshDataInBackground() {
-  setDotLoading(); // niebieska kropka
+  setDotLoading();
 
   const data = await fetchPlanWithRetry();
 
   if (!data) {
-    setDotError(); // API padło, ale UI zostaje
+    setDotError();
     return;
   }
 
-  // zapisujemy nowe dane
+  // jeśli dane identyczne → nie rób rerenderu
+  if (JSON.stringify(fullData) === JSON.stringify(data)) {
+    setDotLoaded();
+    return;
+  }
+
   fullData = data;
+
   localStorage.setItem("cachedPlan_" + currentTok, JSON.stringify(data));
   localStorage.setItem("cachedPlanTimestamp_" + currentTok, Date.now());
 
@@ -542,11 +557,13 @@ async function refreshDataInBackground() {
 
   updateGroupFilter();
   applyAllFilters();
-  setDotLoaded(); // zielona kropka
+  setDotLoaded();
 }
 
+/* ============================================
+   EVENTY
+   ============================================ */
 
-/* EVENTS */
 document.getElementById("specSelect").addEventListener("change", async e => {
   currentTok = e.target.value;
   localStorage.setItem("lastSpecTok", currentTok);
@@ -558,17 +575,22 @@ document.getElementById("specSelect").addEventListener("change", async e => {
   const cachedTime = Number(localStorage.getItem(cacheTimeKey));
 
   if (cached && cachedTime) {
-    // szybkie przełączenie specjalizacji bez spinnera
     fullData = JSON.parse(cached);
     lastTimestamp = cachedTime / 1000;
 
     updateGroupFilter();
     applyAllFilters();
+
+    // odśwież w tle
+    refreshDataInBackground();
     return;
   }
 
-  // brak cache → pełne ładowanie
-  init();
+  // brak cache → puste UI + refresh
+  fullData = [];
+  updateGroupFilter();
+  applyAllFilters();
+  refreshDataInBackground();
 });
 
 document.getElementById("groupSelect").addEventListener("change", e => {
@@ -601,6 +623,13 @@ document.getElementById("viewCards").addEventListener("click", () => {
   render();
 });
 
+document.getElementById("viewTable").addEventListener("click", () => {
+  currentView = "table";
+  document.getElementById("viewTable").classList.add("active");
+  document.getElementById("viewCards").classList.remove("active");
+  render();
+});
+
 document.getElementById("reloadBtn").addEventListener("click", async () => {
   setDotLoading();
 
@@ -612,13 +641,9 @@ document.getElementById("reloadBtn").addEventListener("click", async () => {
   const data = await fetchPlanWithRetry();
 
   if (!data) {
-    msg.textContent = "Brak danych z serwera. Spróbuj ponownie.";
+    msg.textContent = "Brak nowych danych z serwera. Używam zapisanych.";
     setDotError();
-
-    fullData = [];
-    updateGroupFilter();
-    applyAllFilters();
-    return;
+    return; // NIE czyścimy danych
   }
 
   fullData = data;
@@ -637,13 +662,15 @@ document.getElementById("reloadBtn").addEventListener("click", async () => {
   setDotLoaded();
 });
 
-/* MOBILE MENU — FIXED */
+/* ============================================
+   MOBILE MENU
+   ============================================ */
+
 const mobileBtn = document.getElementById("mobileMenuBtn");
 const sidebar = document.querySelector(".sidebar");
 
 let sidebarOpen = false;
 
-// overlay
 const overlay = document.createElement("div");
 overlay.className = "app-overlay";
 document.body.insertBefore(overlay, document.body.firstChild);
@@ -676,7 +703,6 @@ document.addEventListener("click", e => {
   }
 });
 
-// zapobieganie zamykaniu sidebaru przy klikaniu selectów
 ["specSelect", "groupSelect", "startDate", "endDate"].forEach(id => {
   const el = document.getElementById(id);
   if (!el) return;
@@ -697,7 +723,10 @@ function updateMobileMode() {
 window.addEventListener("resize", updateMobileMode);
 updateMobileMode();
 
-/* THEME SWITCHER */
+/* ============================================
+   THEME SWITCHER
+   ============================================ */
+
 const themeToggle = document.getElementById("themeToggle");
 
 function applyTheme() {
@@ -721,26 +750,24 @@ themeToggle.addEventListener("click", () => {
   }, 250);
 });
 
+/* ============================================
+   START
+   ============================================ */
 
-
-
-/* START */
 init();
 
-/* ===============================
-   SERVICE WORKER – pełna obsługa aktualizacji
-   =============================== */
+/* ============================================
+   SERVICE WORKER — aktualizacje
+   ============================================ */
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("./sw.js").then(reg => {
 
-      // 1. Jeśli SW już czeka → pokaż banner
       if (reg.waiting) {
         showUpdateBanner();
       }
 
-      // 2. Wykrywanie nowej instalacji
       reg.addEventListener("updatefound", () => {
         const newWorker = reg.installing;
         if (!newWorker) return;
@@ -754,7 +781,6 @@ if ("serviceWorker" in navigator) {
     });
   });
 
-  // 3. Odbieranie komunikatów z SW
   navigator.serviceWorker.addEventListener("message", event => {
     if (event.data?.type === "NEW_VERSION_AVAILABLE") {
       showUpdateBanner();
@@ -762,9 +788,6 @@ if ("serviceWorker" in navigator) {
   });
 }
 
-/* ===============================
-   FUNKCJA AKTUALIZACJI
-   =============================== */
 function updateApp() {
   navigator.serviceWorker.getRegistration().then(reg => {
     if (reg.waiting) {
@@ -777,9 +800,6 @@ function updateApp() {
   });
 }
 
-/* ===============================
-   POKAZYWANIE BANERA
-   =============================== */
 function showUpdateBanner() {
   const banner = document.getElementById("iosUpdateBanner");
   if (!banner) return;
@@ -789,8 +809,8 @@ function showUpdateBanner() {
   const btn = document.getElementById("iosRefreshBtn");
   if (btn) {
     btn.onclick = () => {
-      banner.classList.remove("show"); // ← natychmiast znika
-      updateApp();                     // ← aktywacja nowego SW
+      banner.classList.remove("show");
+      updateApp();
     };
   }
 }
