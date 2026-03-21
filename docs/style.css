@@ -25,6 +25,7 @@ body {
 }
 /* Delikatny fade przy zmianie motywu */
 body {
+  background-color: var(--bg);
   transition:
     background-color 0.75s ease,
     color 0.75s ease,
