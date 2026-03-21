@@ -561,106 +561,278 @@ async function refreshDataInBackground() {
 }
 
 /* ============================================
-   EVENTY
+   EVENTY — wersja bezpieczna
    ============================================ */
 
-document.getElementById("specSelect").addEventListener("change", async e => {
-  currentTok = e.target.value;
-  localStorage.setItem("lastSpecTok", currentTok);
+/* SPECJALIZACJA */
+const specSelect = document.getElementById("specSelect");
+if (specSelect) {
+  specSelect.addEventListener("change", async e => {
+    currentTok = e.target.value;
+    localStorage.setItem("lastSpecTok", currentTok);
 
-  const cacheKey = "cachedPlan_" + currentTok;
-  const cacheTimeKey = "cachedPlanTimestamp_" + currentTok;
+    const cacheKey = "cachedPlan_" + currentTok;
+    const cacheTimeKey = "cachedPlanTimestamp_" + currentTok;
 
-  const cached = localStorage.getItem(cacheKey);
-  const cachedTime = Number(localStorage.getItem(cacheTimeKey));
+    const cached = localStorage.getItem(cacheKey);
+    const cachedTime = Number(localStorage.getItem(cacheTimeKey));
 
-  if (cached && cachedTime) {
-    fullData = JSON.parse(cached);
-    lastTimestamp = cachedTime / 1000;
+    if (cached && cachedTime) {
+      fullData = JSON.parse(cached);
+      lastTimestamp = cachedTime / 1000;
 
+      updateGroupFilter();
+      applyAllFilters();
+
+      refreshDataInBackground(); // odśwież w tle
+      return;
+    }
+
+    fullData = [];
     updateGroupFilter();
     applyAllFilters();
-
-    // odśwież w tle
     refreshDataInBackground();
-    return;
-  }
+  });
+}
 
-  // brak cache → puste UI + refresh
-  fullData = [];
-  updateGroupFilter();
-  applyAllFilters();
-  refreshDataInBackground();
-});
+/* GRUPA */
+const groupSelect = document.getElementById("groupSelect");
+if (groupSelect) {
+  groupSelect.addEventListener("change", e => {
+    currentGroup = e.target.value;
+    applyAllFilters();
+  });
+}
 
-document.getElementById("groupSelect").addEventListener("change", e => {
-  currentGroup = e.target.value;
-  applyAllFilters();
-});
-
+/* TRYB DAT */
 document.querySelectorAll(".date-mode-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".date-mode-btn").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
 
     currentDateMode = btn.dataset.mode;
-    document.getElementById("customDates").style.display =
-      currentDateMode === "custom" ? "flex" : "none";
+    const custom = document.getElementById("customDates");
+    if (custom) custom.style.display = currentDateMode === "custom" ? "flex" : "none";
 
     applyAllFilters();
   });
 });
 
-document.getElementById("applyCustomDates").addEventListener("click", () => {
-  currentDateMode = "custom";
-  applyAllFilters();
+/* ZAKRES DAT */
+const applyCustomBtn = document.getElementById("applyCustomDates");
+if (applyCustomBtn) {
+  applyCustomBtn.addEventListener("click", () => {
+    currentDateMode = "custom";
+    applyAllFilters();
+  });
+}
+
+/* WIDOK KART */
+const viewCardsBtn = document.getElementById("viewCards");
+if (viewCardsBtn) {
+  viewCardsBtn.addEventListener("click", () => {
+    currentView = "cards";
+    viewCardsBtn.classList.add("active");
+
+    const viewTableBtn = document.getElementById("viewTable");
+    if (viewTableBtn) viewTableBtn.classList.remove("active");
+
+    render();
+  });
+}
+
+/* WIDOK TABELI */
+const viewTableBtn = document.getElementById("viewTable");
+if (viewTableBtn) {
+  viewTableBtn.addEventListener("click", () => {
+    currentView = "table";
+    viewTableBtn.classList.add("active");
+
+    const viewCardsBtn = document.getElementById("viewCards");
+    if (viewCardsBtn) viewCardsBtn.classList.remove("active");
+
+    render();
+  });
+}
+
+/* RELOAD */
+const reloadBtn = document.getElementById("reloadBtn");
+if (reloadBtn) {
+  reloadBtn.addEventListener("click", async () => {
+    setDotLoading();
+
+    const msg = document.getElementById("noDataMessage");
+    if (msg) {
+      msg.style.display = "block";
+      msg.textContent = "Ładowanie danych…";
+    }
+
+    const status = document.getElementById("statusBox");
+    if (status) status.textContent = "Odświeżanie…";
+
+    const data = await fetchPlanWithRetry();
+
+    if (!data) {
+      if (msg) msg.textContent = "Brak nowych danych z serwera. Używam zapisanych.";
+      setDotError();
+      return;
+    }
+
+    fullData = data;
+
+    localStorage.setItem("cachedPlan_" + currentTok, JSON.stringify(data));
+    localStorage.setItem("cachedPlanTimestamp_" + currentTok, Date.now());
+
+    lastTimestamp = Date.now() / 1000;
+
+    if (status) {
+      status.textContent =
+        "Dane zaktualizowano: " +
+        new Date(lastTimestamp * 1000).toLocaleString("pl-PL");
+    }
+
+    updateGroupFilter();
+    applyAllFilters();
+    setDotLoaded();
+  });
+}
+/* ============================================
+   EVENTY — wersja bezpieczna
+   ============================================ */
+
+/* SPECJALIZACJA */
+const specSelect = document.getElementById("specSelect");
+if (specSelect) {
+  specSelect.addEventListener("change", async e => {
+    currentTok = e.target.value;
+    localStorage.setItem("lastSpecTok", currentTok);
+
+    const cacheKey = "cachedPlan_" + currentTok;
+    const cacheTimeKey = "cachedPlanTimestamp_" + currentTok;
+
+    const cached = localStorage.getItem(cacheKey);
+    const cachedTime = Number(localStorage.getItem(cacheTimeKey));
+
+    if (cached && cachedTime) {
+      fullData = JSON.parse(cached);
+      lastTimestamp = cachedTime / 1000;
+
+      updateGroupFilter();
+      applyAllFilters();
+
+      refreshDataInBackground(); // odśwież w tle
+      return;
+    }
+
+    fullData = [];
+    updateGroupFilter();
+    applyAllFilters();
+    refreshDataInBackground();
+  });
+}
+
+/* GRUPA */
+const groupSelect = document.getElementById("groupSelect");
+if (groupSelect) {
+  groupSelect.addEventListener("change", e => {
+    currentGroup = e.target.value;
+    applyAllFilters();
+  });
+}
+
+/* TRYB DAT */
+document.querySelectorAll(".date-mode-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".date-mode-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+
+    currentDateMode = btn.dataset.mode;
+    const custom = document.getElementById("customDates");
+    if (custom) custom.style.display = currentDateMode === "custom" ? "flex" : "none";
+
+    applyAllFilters();
+  });
 });
 
-document.getElementById("viewCards").addEventListener("click", () => {
-  currentView = "cards";
-  document.getElementById("viewCards").classList.add("active");
-  document.getElementById("viewTable").classList.remove("active");
-  render();
-});
+/* ZAKRES DAT */
+const applyCustomBtn = document.getElementById("applyCustomDates");
+if (applyCustomBtn) {
+  applyCustomBtn.addEventListener("click", () => {
+    currentDateMode = "custom";
+    applyAllFilters();
+  });
+}
 
-document.getElementById("viewTable").addEventListener("click", () => {
-  currentView = "table";
-  document.getElementById("viewTable").classList.add("active");
-  document.getElementById("viewCards").classList.remove("active");
-  render();
-});
+/* WIDOK KART */
+const viewCardsBtn = document.getElementById("viewCards");
+if (viewCardsBtn) {
+  viewCardsBtn.addEventListener("click", () => {
+    currentView = "cards";
+    viewCardsBtn.classList.add("active");
 
-document.getElementById("reloadBtn").addEventListener("click", async () => {
-  setDotLoading();
+    const viewTableBtn = document.getElementById("viewTable");
+    if (viewTableBtn) viewTableBtn.classList.remove("active");
 
-  const msg = document.getElementById("noDataMessage");
-  msg.style.display = "block";
-  msg.textContent = "Ładowanie danych…";
-  document.getElementById("statusBox").textContent = "Odświeżanie…";
+    render();
+  });
+}
 
-  const data = await fetchPlanWithRetry();
+/* WIDOK TABELI */
+const viewTableBtn = document.getElementById("viewTable");
+if (viewTableBtn) {
+  viewTableBtn.addEventListener("click", () => {
+    currentView = "table";
+    viewTableBtn.classList.add("active");
 
-  if (!data) {
-    msg.textContent = "Brak nowych danych z serwera. Używam zapisanych.";
-    setDotError();
-    return; // NIE czyścimy danych
-  }
+    const viewCardsBtn = document.getElementById("viewCards");
+    if (viewCardsBtn) viewCardsBtn.classList.remove("active");
 
-  fullData = data;
+    render();
+  });
+}
 
-  localStorage.setItem("cachedPlan_" + currentTok, JSON.stringify(data));
-  localStorage.setItem("cachedPlanTimestamp_" + currentTok, Date.now());
+/* RELOAD */
+const reloadBtn = document.getElementById("reloadBtn");
+if (reloadBtn) {
+  reloadBtn.addEventListener("click", async () => {
+    setDotLoading();
 
-  lastTimestamp = Date.now() / 1000;
+    const msg = document.getElementById("noDataMessage");
+    if (msg) {
+      msg.style.display = "block";
+      msg.textContent = "Ładowanie danych…";
+    }
 
-  document.getElementById("statusBox").textContent =
-    "Dane zaktualizowano: " +
-    new Date(lastTimestamp * 1000).toLocaleString("pl-PL");
+    const status = document.getElementById("statusBox");
+    if (status) status.textContent = "Odświeżanie…";
 
-  updateGroupFilter();
-  applyAllFilters();
-  setDotLoaded();
-});
+    const data = await fetchPlanWithRetry();
+
+    if (!data) {
+      if (msg) msg.textContent = "Brak nowych danych z serwera. Używam zapisanych.";
+      setDotError();
+      return;
+    }
+
+    fullData = data;
+
+    localStorage.setItem("cachedPlan_" + currentTok, JSON.stringify(data));
+    localStorage.setItem("cachedPlanTimestamp_" + currentTok, Date.now());
+
+    lastTimestamp = Date.now() / 1000;
+
+    if (status) {
+      status.textContent =
+        "Dane zaktualizowano: " +
+        new Date(lastTimestamp * 1000).toLocaleString("pl-PL");
+    }
+
+    updateGroupFilter();
+    applyAllFilters();
+    setDotLoaded();
+  });
+}
+
 
 /* ============================================
    MOBILE MENU
