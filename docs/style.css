@@ -688,3 +688,23 @@ body.theme-light .card.group-7 .card-meta span { background: #ffe6f2 !important;
 .card.group-5 { border-left: 4px solid #ffa94d !important; }
 .card.group-6 { border-left: 4px solid #20c997 !important; }
 .card.group-7 { border-left: 4px solid #e64980 !important; }
+
+
+.coffee-box {
+  margin-top: 10px;
+  text-align: center;
+}
+
+.coffee-link {
+  font-size: 11px;
+  color: var(--text-soft);
+  text-decoration: none;
+  opacity: 0.8;
+  transition: color 0.25s ease, opacity 0.25s ease;
+}
+
+.coffee-link:hover {
+  color: var(--accent);
+  opacity: 1;
+}
+
