@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
-BASE = "https://harmonogramy.dsw.edu.pl"
+BASE = "https://harmonogramy.ideis.pl"
 
 TOKS = {
     "1337": "Animacja 3D",
