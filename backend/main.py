@@ -222,7 +222,7 @@ def parse_plan(html):
                 "sala": cells[7].get_text(strip=True),
                 "prowadzacy": cells[8].get_text(strip=True),
                 "zaliczenie": cells[9].get_text(strip=True),
-                "uwagi": cells[10].get_text(strip=True) if len(cells) > 10 else "",
+                "uwagi": cells[11].get_text(strip=True) if len(cells) > 11 else "",
             })
 
     return parsed if parsed else None
