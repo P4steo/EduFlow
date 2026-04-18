@@ -1,3 +1,10 @@
+## [1.10.1](https://github.com/P4steo/EduFlow/compare/v1.10.0...v1.10.1) (2026-04-18)
+
+
+### Bug Fixes
+
+* **parser:** uwagi moved to column 11 after schedule update ([d72ce89](https://github.com/P4steo/EduFlow/commit/d72ce89a57a26ceb0a754e4e57c0a3500c61a60c))
+
 # [1.10.0](https://github.com/P4steo/EduFlow/compare/v1.9.3...v1.10.0) (2026-03-18)
 
 
