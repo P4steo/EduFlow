@@ -302,9 +302,19 @@ input[type="date"]:focus {
 }
 
 .card.cancelled {
-  opacity: 0.5;
-  border-color: var(--danger);
+  border: 2px solid var(--danger) !important;
+  background: rgba(255, 59, 48, 0.08) !important; /* delikatne czerwone tło */
+  opacity: 1 !important; /* nie przyciemniamy całej karty */
 }
+
+.card.cancelled .time,
+.card.cancelled .card-main,
+.card.cancelled .card-meta span,
+.card.cancelled .card-uwagi {
+  color: var(--danger) !important;
+  border-color: rgba(255, 59, 48, 0.3) !important;
+}
+
 
 .card-top {
   display: flex;
