@@ -1,3 +1,10 @@
+## [1.10.2](https://github.com/P4steo/EduFlow/compare/v1.10.1...v1.10.2) (2026-04-19)
+
+
+### Bug Fixes
+
+* restrict .now highlight to current date (normalize item.data and compare with today) ([5938a97](https://github.com/P4steo/EduFlow/commit/5938a97ad90c36b3801aa06ca40f61fb00caa3ff))
+
 ## [1.10.1](https://github.com/P4steo/EduFlow/compare/v1.10.0...v1.10.1) (2026-04-18)
 
 
