@@ -333,8 +333,11 @@ function groupByDate(data) {
   }
 
   return Object.entries(map).sort(
-    (a, b) => new Date(a[0]) - new Date(b[0])
-  );
+  (a, b) =>
+    new Date(a[0].split(" ")[0].replace(/\./g, "-")) -
+    new Date(b[0].split(" ")[0].replace(/\./g, "-"))
+   );
+
 }
 
 function parseTime(t) {
@@ -438,8 +441,9 @@ function renderCards() {
 function renderTable() {
   const rows = filteredData
     .sort((a, b) => {
-      const d1 = new Date(a.data.replace(/\./g, "-"));
-      const d2 = new Date(b.data.replace(/\./g, "-"));
+      const d1 = new Date(a.data.split(" ")[0].replace(/\./g, "-"));
+      const d2 = new Date(b.data.split(" ")[0].replace(/\./g, "-"));
+
       if (d1 - d2 !== 0) return d1 - d2;
 
       const t1 = new Date(`2000-01-01T${a.od}:00`);
