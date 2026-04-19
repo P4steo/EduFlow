@@ -7,7 +7,7 @@ Starsze wersje nie otrzymują poprawek poza krytycznymi przypadkami.
 
 | Wersja | Wsparcie            |
 |--------|----------------------|
-| 1.x.x  | ✔️ aktywne           |
+| 1.10.x  | ✔️ aktywne           |
 | 0.x.x  | ❌ niewspierane      |
 
 ## Reporting a Vulnerability
