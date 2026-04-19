@@ -427,7 +427,13 @@ function renderCards() {
 
       const start = parseTime(item.od);
       const end = parseTime(item.do);
-      if (nowMinutes >= start && nowMinutes <= end) card.classList.add("now");
+      const todayStr = new Date().toISOString().split("T")[0].replace(/-/g, ".");
+      const itemDate = item.data.split(" ")[0];
+
+      if (itemDate === todayStr && nowMinutes >= start && nowMinutes <= end) {
+          card.classList.add("now");
+      }
+
 
       dayBlock.appendChild(card);
     });
