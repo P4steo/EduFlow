@@ -61,12 +61,12 @@ def fetch_html(tok: str):
             end = parts[1].replace(",", "-")
             mode = parts[2]
         except Exception:
-            start = "2026-2-2"
-            end = "2026-9-30"
+            start = "2026-09-26"
+            end = "2027-02-15"
             mode = "3"
     else:
-        start = "2026-2-2"
-        end = "2026-9-30"
+        start = "2026-09-26"
+        end = "2027-02-15"
         mode = "3"
 
     payload = {
