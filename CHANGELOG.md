@@ -1,3 +1,10 @@
+# [1.11.0](https://github.com/P4steo/EduFlow/compare/v1.10.2...v1.11.0) (2026-09-26)
+
+
+### Features
+
+* add support for SemN and ANG/LektN group detection ([c412427](https://github.com/P4steo/EduFlow/commit/c4124278efcb8951b4a1dd9df1a87254f9da1ac9))
+
 ## [1.10.2](https://github.com/P4steo/EduFlow/compare/v1.10.1...v1.10.2) (2026-04-19)
 
 
