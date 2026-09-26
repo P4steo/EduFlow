@@ -157,9 +157,12 @@ def parse_plan(html):
     parsed = []
     current_date = None
 
+    # --- REGEXY GRUP ---
     cw_pattern = re.compile(r"Ćw(\d+)N", re.IGNORECASE)
+    sem_pattern = re.compile(r"Sem(\d+)N", re.IGNORECASE)
+    lang_pattern = re.compile(r"(?:Lekt|ANG)(\d+)N", re.IGNORECASE)
 
-    # 1. wykrywanie kolumny grupy na podstawie pierwszego wiersza
+    # --- WYKRYWANIE KOLUMNY GRUPY ---
     first_data_row = None
     for row in rows:
         if "dxgvDataRow_iOS" in row.get("class", []):
@@ -171,14 +174,14 @@ def parse_plan(html):
         cells = first_data_row.find_all("td")
         for i, c in enumerate(cells):
             text = c.get_text(strip=True)
-            if cw_pattern.search(text):
+            if cw_pattern.search(text) or sem_pattern.search(text) or lang_pattern.search(text):
                 group_col_index = i
                 break
 
     if group_col_index is None:
-        group_col_index = -1  # szukamy w całym wierszu
+        group_col_index = -1
 
-    # 2. parsowanie wszystkich wierszy
+    # --- PARSOWANIE WSZYSTKICH WIERSZY ---
     for row in rows:
         classes = row.get("class", [])
 
@@ -195,28 +198,53 @@ def parse_plan(html):
             if len(cells) < 10:
                 continue
 
-            # 3. wyciąganie numeru grupy tylko z Ćw\d+N
+            # --- WYKRYWANIE GROUP_CODE ---
             group_code = ""
 
             if group_col_index >= 0:
                 text = cells[group_col_index].get_text(strip=True)
+
+                # Ćwiczenia
                 m = cw_pattern.search(text)
                 if m:
                     group_code = m.group(1)
+
+                # Seminaria
+                m2 = sem_pattern.search(text)
+                if m2:
+                    group_code = m2.group(1)
+
+                # Języki (Lekt/ANG)
+                m3 = lang_pattern.search(text)
+                if m3:
+                    group_code = m3.group(1)
+
             else:
                 for c in cells:
                     text = c.get_text(strip=True)
+
                     m = cw_pattern.search(text)
                     if m:
                         group_code = m.group(1)
                         break
 
+                    m2 = sem_pattern.search(text)
+                    if m2:
+                        group_code = m2.group(1)
+                        break
+
+                    m3 = lang_pattern.search(text)
+                    if m3:
+                        group_code = m3.group(1)
+                        break
+
+            # --- DODAWANIE DO LISTY ---
             parsed.append({
                 "data": cells[0].get_text(strip=True) if current_date is None else current_date,
                 "od": cells[1].get_text(strip=True),
                 "do": cells[2].get_text(strip=True),
                 "godziny": cells[3].get_text(strip=True),
-                "group_code": group_code,  # "" dla wykładów
+                "group_code": group_code,
                 "przedmiot": cells[5].get_text(strip=True),
                 "typ": cells[6].get_text(strip=True),
                 "sala": cells[7].get_text(strip=True),
@@ -226,6 +254,7 @@ def parse_plan(html):
             })
 
     return parsed if parsed else None
+
 
 
 @app.get("/plan")
